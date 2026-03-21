@@ -1,6 +1,6 @@
 // ─── Config ───────────────────────────────────────────────────────────────
 // Remplacez par l'URL de votre Google Apps Script après déploiement
-const APPS_SCRIPT_URL = 'VOTRE_APPS_SCRIPT_URL_ICI';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqT4z7dzwlNBL8SaXJUKjcPb0e__MYNSZziVd7B-B6Y9umYWEegvUKIF7Q7gTiFTauGg/exec';
 
 // ─── State ────────────────────────────────────────────────────────────────
 let allStreamers = [];
