@@ -1126,34 +1126,14 @@ body > * { position: relative; z-index: 1; }
 }
 
 .btn-admin-footer {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 18px;
-  border-radius: 999px;
-  background: var(--dark2);
-  border: 1px solid var(--border-light);
-  color: var(--grey);
-  font-size: 0.78rem;
-  font-weight: 600;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  transition: var(--transition);
-  letter-spacing: 0.3px;
+  opacity: 0;
+  flex-shrink: 0;
 }
-
-.btn-admin-footer svg {
-  width: 14px; height: 14px;
-  stroke: var(--grey);
-  transition: stroke var(--transition);
-}
-
-.btn-admin-footer:hover {
-  background: var(--orange-faint);
-  border-color: var(--orange);
-  color: var(--orange);
-}
-
-.btn-admin-footer:hover svg { stroke: var(--orange); }
 
 /* ─── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
