@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RushStream 974 — Streamers de La Réunion</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ─── Navbar ─────────────────────────────────────────────────────────── -->
+  <nav class="navbar">
+    <div class="navbar-logo">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2.149 0L.537 4.119v16.836h5.731V24h3.224l3.045-3.045h4.657l6.269-6.269V0H2.149zm19.164 13.612l-3.582 3.582H12l-3.045 3.045v-3.045H4.119V2.687h17.194v10.925zM14.328 5.373H16.9v7.164h-2.572V5.373zm-6.716 0h2.567v7.164H7.612V5.373z"/>
+      </svg>
+      Rush<span class="dot">Stream</span> <span style="color:#555;font-weight:400;font-size:1rem">974</span>
+    </div>
+    <div class="navbar-right">
+      <div class="navbar-badge">
+        <div class="pulse-dot"></div>
+        <span id="live-count">0 en live</span>
+      </div>
+      <button class="btn-admin" onclick="openAdminModal()">Admin</button>
+    </div>
+  </nav>
+
+  <!-- ─── Hero ───────────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-tag">
+      🏝️ Île de La Réunion · 974
+    </div>
+    <h1>Les streamers <span>réunionnais</span><br/>tous au même endroit</h1>
+    <p>Retrouvez en temps réel tous les créateurs de contenu de l'île. Supports, kass, tchek !</p>
+  </section>
+
+  <!-- ─── Filter Bar ─────────────────────────────────────────────────────── -->
+  <div class="filter-bar">
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-filter="all">Tous</button>
+      <button class="filter-tab" data-filter="live">🔴 En live</button>
+      <button class="filter-tab" data-filter="offline">Hors ligne</button>
+    </div>
+    <div class="streamer-count">
+      <span id="count-display">0</span> streamers
+    </div>
+  </div>
+
+  <!-- ─── Error Banner ───────────────────────────────────────────────────── -->
+  <div class="error-banner" id="error-banner"></div>
+
+  <!-- ─── Grid ──────────────────────────────────────────────────────────── -->
+  <section class="grid-section">
+    <div class="streamers-grid" id="streamers-grid">
+      <!-- Skeletons affichés pendant le chargement -->
+      <div class="skeleton-card">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-lines">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+        </div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-lines">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+        </div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-lines">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Footer ────────────────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="footer-logo">Rush<span>Stream</span> 974</div>
+    <p>Fait avec ❤️ pour la communauté réunionnaise · Données via Twitch API</p>
+  </footer>
+
+  <!-- ─── Admin Login Modal ─────────────────────────────────────────────── -->
+  <div class="modal-overlay" id="admin-login-modal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('admin-login-modal')">✕</button>
+      <h2>🔐 Espace Admin</h2>
+      <p class="modal-subtitle">Entrez le mot de passe pour gérer les streamers</p>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" class="form-input" id="admin-password-input"
+               placeholder="••••••••••" onkeydown="if(event.key==='Enter') loginAdmin()" />
+      </div>
+      <button class="btn-primary" onclick="loginAdmin()">Connexion</button>
+      <div class="modal-error" id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- ─── Admin Panel Modal ─────────────────────────────────────────────── -->
+  <div class="modal-overlay" id="admin-panel-modal">
+    <div class="modal" style="max-width:520px">
+      <button class="modal-close" onclick="closeModal('admin-panel-modal')">✕</button>
+      <h2>⚡ Gestion des streamers</h2>
+      <p class="modal-subtitle">Ajoutez ou supprimez des streamers Twitch</p>
+
+      <!-- Formulaire ajout -->
+      <div class="form-group">
+        <label>Nom d'utilisateur Twitch</label>
+        <input type="text" class="form-input" id="new-streamer-input"
+               placeholder="ex: monstreamer974"
+               onkeydown="if(event.key==='Enter') addStreamer()" />
+      </div>
+      <button class="btn-primary" id="add-btn" onclick="addStreamer()">+ Ajouter le streamer</button>
+      <div class="modal-error" id="add-error"></div>
+      <div class="modal-success" id="add-success"></div>
+
+      <!-- Liste des streamers -->
+      <div class="admin-list">
+        <h3>Streamers enregistrés</h3>
+        <div id="admin-streamers-list">
+          <p style="color:#555;font-size:0.85rem">Chargement...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
