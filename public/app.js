@@ -201,13 +201,21 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   });
 });
 
-// Raccourci clavier admin : Ctrl + Shift + R
+// Raccourci clavier admin : Ctrl + Alt + A
 document.addEventListener('keydown', e => {
-  if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+  if (e.ctrlKey && e.altKey && e.key === 'a') {
     e.preventDefault();
     openAdminModal();
   }
 });
+
+// Accès via URL secrète : #rushstream974
+if (window.location.hash === '#rushstream974') {
+  window.addEventListener('load', () => {
+    history.replaceState(null, '', window.location.pathname);
+    openAdminModal();
+  });
+};
 
 // ─── Formulaire candidature ───────────────────────────────────────────────
 async function submitJoin(e) {
