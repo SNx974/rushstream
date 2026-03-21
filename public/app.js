@@ -1,7 +1,3 @@
-// ─── Config ───────────────────────────────────────────────────────────────
-// Remplacez par l'URL de votre Google Apps Script après déploiement
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqT4z7dzwlNBL8SaXJUKjcPb0e__MYNSZziVd7B-B6Y9umYWEegvUKIF7Q7gTiFTauGg/exec';
-
 // ─── State ────────────────────────────────────────────────────────────────
 let allStreamers = [];
 let currentFilter = 'all';
@@ -183,6 +179,7 @@ function openAdminModal() {
   if (adminPassword) {
     openModal('admin-panel-modal');
     loadAdminList();
+    loadCandidates();
   } else {
     openModal('admin-login-modal');
     setTimeout(() => document.getElementById('admin-password-input').focus(), 100);
@@ -230,12 +227,12 @@ async function submitJoin(e) {
   btn.textContent = 'Envoi en cours...';
 
   try {
-    await fetch(APPS_SCRIPT_URL, {
+    const res = await fetch('/api/candidates', {
       method: 'POST',
-      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nom, prenom, pseudo, twitch, date: new Date().toISOString() })
+      body: JSON.stringify({ nom, prenom, pseudo, twitch })
     });
+    if (!res.ok) throw new Error();
     document.getElementById('join-form').reset();
     sucEl.textContent = 'Candidature envoyée ! Elle sera examinée avant publication.';
     sucEl.style.display = 'block';
@@ -245,6 +242,88 @@ async function submitJoin(e) {
   } finally {
     btn.disabled = false;
     btn.textContent = 'Envoyer ma candidature';
+  }
+}
+
+// ─── Admin — Candidatures ─────────────────────────────────────────────────
+async function loadCandidates() {
+  const container = document.getElementById('admin-candidates-list');
+  if (!container) return;
+  try {
+    const res = await fetch('/api/candidates', {
+      headers: { 'x-admin-password': adminPassword }
+    });
+    const candidates = await res.json();
+
+    if (candidates.length === 0) {
+      container.innerHTML = '<p style="color:#555;font-size:0.85rem">Aucune candidature.</p>';
+      return;
+    }
+
+    container.innerHTML = candidates.map(c => `
+      <div class="candidate-item" id="cand-${c.id}">
+        <div class="candidate-info">
+          <div class="candidate-row">
+            <span class="candidate-label">Twitch</span>
+            <span class="candidate-value candidate-twitch">@${escHtml(c.twitch)}</span>
+          </div>
+          <div class="candidate-row">
+            <span class="candidate-label">Identité</span>
+            <span class="candidate-value">${escHtml(c.prenom)} ${escHtml(c.nom)}</span>
+          </div>
+          <div class="candidate-row">
+            <span class="candidate-label">Pseudo</span>
+            <span class="candidate-value">${escHtml(c.pseudo)}</span>
+          </div>
+          <div class="candidate-row">
+            <span class="candidate-label">Date</span>
+            <span class="candidate-value">${new Date(c.date).toLocaleDateString('fr-FR')}</span>
+          </div>
+        </div>
+        <div class="candidate-actions">
+          <button class="btn-approve" onclick="approveCandidate('${c.id}', '${escHtml(c.twitch)}')">+ Ajouter</button>
+          <button class="btn-delete" onclick="deleteCandidate('${c.id}')">Refuser</button>
+        </div>
+      </div>
+    `).join('');
+  } catch {
+    container.innerHTML = '<p style="color:#ff6b6b;font-size:0.85rem">Erreur de chargement.</p>';
+  }
+}
+
+async function approveCandidate(id, twitch) {
+  const btn = document.querySelector(`#cand-${id} .btn-approve`);
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    const res = await fetch('/api/streamers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+      body: JSON.stringify({ username: twitch })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      await deleteCandidate(id);
+      await loadStreamers();
+      await loadAdminList();
+    } else {
+      alert(data.error || 'Erreur lors de l\'ajout.');
+      if (btn) { btn.disabled = false; btn.textContent = '+ Ajouter'; }
+    }
+  } catch {
+    alert('Erreur serveur.');
+    if (btn) { btn.disabled = false; btn.textContent = '+ Ajouter'; }
+  }
+}
+
+async function deleteCandidate(id) {
+  await fetch(`/api/candidates/${id}`, {
+    method: 'DELETE',
+    headers: { 'x-admin-password': adminPassword }
+  });
+  document.getElementById(`cand-${id}`)?.remove();
+  const container = document.getElementById('admin-candidates-list');
+  if (container && container.children.length === 0) {
+    container.innerHTML = '<p style="color:#555;font-size:0.85rem">Aucune candidature.</p>';
   }
 }
 

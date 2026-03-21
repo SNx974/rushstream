@@ -7,6 +7,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'streamers.json');
+const CANDIDATES_FILE = path.join(__dirname, 'data', 'candidates.json');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -196,6 +197,54 @@ app.post('/api/admin/login', (req, res) => {
     res.json({ success: true });
   } else {
     res.status(401).json({ error: 'Mot de passe incorrect' });
+  }
+});
+
+// POST /api/candidates — soumettre une candidature (public)
+app.post('/api/candidates', (req, res) => {
+  const { nom, prenom, pseudo, twitch } = req.body;
+  if (!nom || !prenom || !pseudo || !twitch) {
+    return res.status(400).json({ error: 'Tous les champs sont requis' });
+  }
+  try {
+    const candidates = JSON.parse(fs.readFileSync(CANDIDATES_FILE, 'utf8'));
+    candidates.push({
+      id: Date.now().toString(),
+      nom: nom.trim(),
+      prenom: prenom.trim(),
+      pseudo: pseudo.trim(),
+      twitch: twitch.trim().toLowerCase(),
+      date: new Date().toISOString(),
+      statut: 'En attente'
+    });
+    fs.writeFileSync(CANDIDATES_FILE, JSON.stringify(candidates, null, 2));
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET /api/candidates — liste des candidatures (admin)
+app.get('/api/candidates', (req, res) => {
+  if (!checkAdmin(req, res)) return;
+  try {
+    const candidates = JSON.parse(fs.readFileSync(CANDIDATES_FILE, 'utf8'));
+    res.json(candidates);
+  } catch {
+    res.json([]);
+  }
+});
+
+// DELETE /api/candidates/:id — supprimer une candidature (admin)
+app.delete('/api/candidates/:id', (req, res) => {
+  if (!checkAdmin(req, res)) return;
+  try {
+    const candidates = JSON.parse(fs.readFileSync(CANDIDATES_FILE, 'utf8'));
+    const filtered = candidates.filter(c => c.id !== req.params.id);
+    fs.writeFileSync(CANDIDATES_FILE, JSON.stringify(filtered, null, 2));
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
