@@ -1,3 +1,7 @@
+// ─── Config ───────────────────────────────────────────────────────────────
+// Remplacez par l'URL de votre Google Apps Script après déploiement
+const APPS_SCRIPT_URL = 'VOTRE_APPS_SCRIPT_URL_ICI';
+
 // ─── State ────────────────────────────────────────────────────────────────
 let allStreamers = [];
 let currentFilter = 'all';
@@ -207,6 +211,42 @@ document.addEventListener('keydown', e => {
     openAdminModal();
   }
 });
+
+// ─── Formulaire candidature ───────────────────────────────────────────────
+async function submitJoin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('join-btn');
+  const errEl = document.getElementById('join-error');
+  const sucEl = document.getElementById('join-success');
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  const nom = document.getElementById('join-nom').value.trim();
+  const prenom = document.getElementById('join-prenom').value.trim();
+  const pseudo = document.getElementById('join-pseudo').value.trim();
+  const twitch = document.getElementById('join-twitch').value.trim();
+
+  btn.disabled = true;
+  btn.textContent = 'Envoi en cours...';
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nom, prenom, pseudo, twitch, date: new Date().toISOString() })
+    });
+    document.getElementById('join-form').reset();
+    sucEl.textContent = 'Candidature envoyée ! Elle sera examinée avant publication.';
+    sucEl.style.display = 'block';
+  } catch {
+    errEl.textContent = 'Erreur lors de l\'envoi. Réessayez.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Envoyer ma candidature';
+  }
+}
 
 // ─── Admin Login ──────────────────────────────────────────────────────────
 async function loginAdmin() {

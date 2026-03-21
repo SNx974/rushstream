@@ -41,7 +41,6 @@
       <span class="line2">tous au même endroit</span>
     </h1>
     <p class="hero-desc">
-      Retrouvez en temps réel tous les créateurs de contenu de l'île.
       Supports, kass, tchek !
     </p>
     <div class="hero-divider"></div>
@@ -94,6 +93,47 @@
             <div class="skeleton-line short"></div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Section Candidature ──────────────────────────────────────────── -->
+  <section class="join-section">
+    <div class="join-container">
+      <div class="join-left">
+        <div class="join-tag">Rejoindre la liste</div>
+        <h2>Tu stream depuis La Réunion ?</h2>
+        <p>Soumets ta candidature, elle sera examinée avant d'apparaître sur le site.</p>
+        <ul class="join-perks">
+          <li>Visibilité auprès de la communauté 974</li>
+          <li>Apparition en temps réel quand tu stream</li>
+          <li>Gratuit et sans engagement</li>
+        </ul>
+      </div>
+      <div class="join-right">
+        <form class="join-form" id="join-form" onsubmit="submitJoin(event)">
+          <div class="join-form-row">
+            <div class="form-group">
+              <label>Nom</label>
+              <input type="text" class="form-input" id="join-nom" placeholder="Dupont" required />
+            </div>
+            <div class="form-group">
+              <label>Prénom</label>
+              <input type="text" class="form-input" id="join-prenom" placeholder="Jean" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Pseudo streamer</label>
+            <input type="text" class="form-input" id="join-pseudo" placeholder="MonPseudo974" required />
+          </div>
+          <div class="form-group">
+            <label>Nom de la chaine Twitch</label>
+            <input type="text" class="form-input" id="join-twitch" placeholder="monchaine974" required />
+          </div>
+          <button type="submit" class="btn-join" id="join-btn">Envoyer ma candidature</button>
+          <div class="join-error" id="join-error"></div>
+          <div class="join-success" id="join-success"></div>
+        </form>
       </div>
     </div>
   </section>
