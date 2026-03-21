@@ -200,6 +200,14 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   });
 });
 
+// Raccourci clavier admin : Ctrl + Shift + R
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+    e.preventDefault();
+    openAdminModal();
+  }
+});
+
 // ─── Admin Login ──────────────────────────────────────────────────────────
 async function loginAdmin() {
   const pwd = document.getElementById('admin-password-input').value;
