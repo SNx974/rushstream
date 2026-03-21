@@ -77,9 +77,14 @@ function buildCard(s) {
     ? `<span class="live-dot"></span>`
     : `<span class="offline-dot"></span>`;
 
+  const liveDuration = s.isLive && s.stream?.startedAt
+    ? `<div class="card-duration" data-started="${s.stream.startedAt}">⏱ ${formatDuration(s.stream.startedAt)}</div>`
+    : '';
+
   const subInfo = s.isLive
     ? `${s.stream.game ? `<div class="card-game">${s.stream.game}</div>` : ''}
-       ${s.stream.title ? `<div class="card-title">${escHtml(s.stream.title)}</div>` : ''}`
+       ${s.stream.title ? `<div class="card-title">${escHtml(s.stream.title)}</div>` : ''}
+       ${liveDuration}`
     : `<div class="card-offline-status">Hors ligne</div>`;
 
   return `
@@ -108,6 +113,22 @@ function buildCard(s) {
 function openTwitch(url) {
   window.open(url, '_blank', 'noopener');
 }
+
+function formatDuration(startedAt) {
+  const diff = Math.floor((Date.now() - new Date(startedAt)) / 1000);
+  const h = Math.floor(diff / 3600);
+  const m = Math.floor((diff % 3600) / 60);
+  const s = diff % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2,'0')}m`;
+  return `${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+}
+
+// Mettre à jour les durées chaque seconde
+setInterval(() => {
+  document.querySelectorAll('.card-duration[data-started]').forEach(el => {
+    el.textContent = '⏱ ' + formatDuration(el.dataset.started);
+  });
+}, 1000);
 
 function formatViewers(n) {
   if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
