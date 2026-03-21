@@ -13,26 +13,38 @@
   <!-- ─── Navbar ─────────────────────────────────────────────────────────── -->
   <nav class="navbar">
     <div class="navbar-logo">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2.149 0L.537 4.119v16.836h5.731V24h3.224l3.045-3.045h4.657l6.269-6.269V0H2.149zm19.164 13.612l-3.582 3.582H12l-3.045 3.045v-3.045H4.119V2.687h17.194v10.925zM14.328 5.373H16.9v7.164h-2.572V5.373zm-6.716 0h2.567v7.164H7.612V5.373z"/>
-      </svg>
-      Rush<span class="dot">Stream</span> <span style="color:#555;font-weight:400;font-size:1rem">974</span>
+      <img src="rushxp.png" alt="RushXP Logo" />
+      <div class="navbar-logo-text">
+        <div class="navbar-logo-name">Rush<span>Stream</span></div>
+        <div class="navbar-logo-sub">Île de La Réunion · 974</div>
+      </div>
     </div>
     <div class="navbar-right">
-      <div class="navbar-badge">
-        <div class="pulse-dot"></div>
-        <span id="live-count">0 en live</span>
+      <div class="navbar-stats">
+        <div class="stat-pill live-pill">
+          <div class="pulse-dot"></div>
+          <span id="live-count">0 en live</span>
+        </div>
+        <div class="stat-pill">
+          <span id="count-display">0</span>&nbsp;streamers
+        </div>
       </div>
     </div>
   </nav>
 
   <!-- ─── Hero ───────────────────────────────────────────────────────────── -->
   <section class="hero">
-    <div class="hero-tag">
-      🏝️ Île de La Réunion · 974
-    </div>
-    <h1>Les streamers <span>réunionnais</span><br/>tous au même endroit</h1>
-    <p>Retrouvez en temps réel tous les créateurs de contenu de l'île. Supports, kass, tchek !</p>
+    <img src="rushxp.png" alt="RushXP" class="hero-logo-big" />
+    <div class="hero-eyebrow">Île de La Réunion · 974</div>
+    <h1>
+      Les streamers réunionnais
+      <span class="line2">tous au même endroit</span>
+    </h1>
+    <p class="hero-desc">
+      Retrouvez en temps réel tous les créateurs de contenu de l'île.
+      Supports, kass, tchek !
+    </p>
+    <div class="hero-divider"></div>
   </section>
 
   <!-- ─── Filter Bar ─────────────────────────────────────────────────────── -->
@@ -43,7 +55,7 @@
       <button class="filter-tab" data-filter="offline">Hors ligne</button>
     </div>
     <div class="streamer-count">
-      <span id="count-display">0</span> streamers
+      <span id="count-label">0</span> streamers enregistrés
     </div>
   </div>
 
@@ -53,7 +65,6 @@
   <!-- ─── Grid ──────────────────────────────────────────────────────────── -->
   <section class="grid-section">
     <div class="streamers-grid" id="streamers-grid">
-      <!-- Skeletons affichés pendant le chargement -->
       <div class="skeleton-card">
         <div class="skeleton-thumb"></div>
         <div class="skeleton-body">
@@ -89,7 +100,10 @@
 
   <!-- ─── Footer ────────────────────────────────────────────────────────── -->
   <footer class="footer">
-    <div class="footer-logo">Rush<span>Stream</span> 974</div>
+    <div class="footer-left">
+      <img src="rushxp.png" alt="RushXP" />
+      <span>Rush<b>Stream</b> 974</span>
+    </div>
     <p>Fait avec ❤️ pour la communauté réunionnaise · Données via Twitch API</p>
   </footer>
 
@@ -116,7 +130,6 @@
       <h2>⚡ Gestion des streamers</h2>
       <p class="modal-subtitle">Ajoutez ou supprimez des streamers Twitch</p>
 
-      <!-- Formulaire ajout -->
       <div class="form-group">
         <label>Nom d'utilisateur Twitch</label>
         <input type="text" class="form-input" id="new-streamer-input"
@@ -127,7 +140,6 @@
       <div class="modal-error" id="add-error"></div>
       <div class="modal-success" id="add-success"></div>
 
-      <!-- Liste des streamers -->
       <div class="admin-list">
         <h3>Streamers enregistrés</h3>
         <div id="admin-streamers-list">
