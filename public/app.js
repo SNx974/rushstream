@@ -42,148 +42,106 @@ let featuredLive = [];
 function renderFeatured(streamers) {
   featuredLive = streamers.filter(s => s.featured && s.isLive);
   const section = document.getElementById('featured-section');
-
-  if (featuredLive.length === 0) {
-    section.style.display = 'none';
-    return;
-  }
-
+  if (featuredLive.length === 0) { section.style.display = 'none'; return; }
   section.style.display = 'block';
   if (carouselIndex >= featuredLive.length) carouselIndex = 0;
   buildCarousel();
 }
 
-function buildCarousel() {
-  const track = document.getElementById('carousel-track');
+function buildCarouselItemHtml(s, i) {
+  const isActive = i === carouselIndex;
   const hostname = window.location.hostname;
 
-  track.innerHTML = featuredLive.map((s, i) => {
-    const isActive = i === carouselIndex;
-    const mediaHtml = isActive
-      ? `<iframe src="https://player.twitch.tv/?channel=${s.username}&parent=${hostname}&muted=false&autoplay=true"
-           allowfullscreen allow="autoplay; fullscreen"></iframe>`
-      : (s.stream?.thumbnail
-          ? `<img src="${s.stream.thumbnail}?t=${Date.now()}" alt="${escHtml(s.displayName)}" loading="lazy" />
-             <div class="carr-overlay">
-               <div class="carr-live-badge">LIVE</div>
-               <div class="carr-viewers">${formatViewers(s.stream?.viewers || 0)} spectateurs</div>
-             </div>`
-          : '<div class="carr-placeholder"></div>');
+  if (isActive) {
+    const avatarHtml = s.profileImage
+      ? `<img src="${s.profileImage}" alt="${escHtml(s.displayName)}" />`
+      : `<div class="feat-av-ph">${(s.displayName||s.username)[0].toUpperCase()}</div>`;
 
-    return `<div class="carousel-item ${isActive ? 'active' : ''}" data-index="${i}" onclick="carouselGoTo(${i})">
-      <div class="carousel-media">${mediaHtml}</div>
+    const tagsHtml = (s.tags && s.tags.length)
+      ? s.tags.map(t => `<span class="feat-tag">${escHtml(t)}</span>`).join('')
+      : '';
+
+    return `<div class="carousel-item active" data-index="${i}">
+      <div class="carr-active-wrap">
+        <div class="carr-player">
+          <iframe src="https://player.twitch.tv/?channel=${s.username}&parent=${hostname}&muted=false&autoplay=true"
+            allowfullscreen allow="autoplay; fullscreen"></iframe>
+        </div>
+        <div class="carr-info">
+          <div class="carr-info-top">
+            <div class="carr-avatar">${avatarHtml}</div>
+            <div class="carr-meta">
+              <div class="carr-name">${escHtml(s.displayName || s.username)}</div>
+              ${s.stream?.game ? `<div class="carr-game">${escHtml(s.stream.game)}</div>` : ''}
+              <div class="carr-viewers-row">
+                <svg viewBox="0 0 16 16" fill="currentColor" width="11" height="11"><path d="M8 2C4.5 2 1.5 4.5 0 8c1.5 3.5 4.5 6 8 6s6.5-2.5 8-6c-1.5-3.5-4.5-6-8-6zm0 10c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                ${formatViewers(s.stream?.viewers || 0)} spectateurs
+                ${s.stream?.startedAt ? `<span class="carr-duration" data-started="${s.stream.startedAt}">${formatDuration(s.stream.startedAt)}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          ${s.stream?.title ? `<div class="carr-title">${escHtml(s.stream.title)}</div>` : ''}
+          ${tagsHtml ? `<div class="carr-tags">${tagsHtml}</div>` : ''}
+          <a class="carr-twitch-btn" href="${s.twitchUrl}" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M2.149 0L.537 4.119v16.836h5.731V24h3.224l3.045-3.045h4.657l6.269-6.269V0H2.149zm19.164 13.612l-3.582 3.582H12l-3.045 3.045v-3.045H4.119V2.687h17.194v10.925zM14.328 5.373H16.9v7.164h-2.572V5.373zm-6.716 0h2.567v7.164H7.612V5.373z"/></svg>
+            Voir sur Twitch
+          </a>
+        </div>
+      </div>
     </div>`;
-  }).join('');
+  }
 
+  const thumbHtml = s.stream?.thumbnail
+    ? `<img src="${s.stream.thumbnail}?t=${Date.now()}" alt="${escHtml(s.displayName)}" loading="lazy" />`
+    : '<div class="carr-placeholder"></div>';
+
+  return `<div class="carousel-item" data-index="${i}" onclick="carouselGoTo(${i})">
+    <div class="carr-thumb-wrap">
+      ${thumbHtml}
+      <div class="carr-overlay">
+        <div class="carr-live-badge">LIVE</div>
+        <div class="carr-viewers-badge">${formatViewers(s.stream?.viewers || 0)}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildCarousel() {
+  const track = document.getElementById('carousel-track');
+  track.innerHTML = featuredLive.map((s, i) => buildCarouselItemHtml(s, i)).join('');
   updateCarouselPosition();
-  updateFeaturedInfoBar();
   updateNavVisibility();
 }
 
 function updateCarouselPosition() {
   const viewport = document.getElementById('carousel-viewport');
   const track = document.getElementById('carousel-track');
-  const infoBar = document.getElementById('featured-info-bar');
   if (!viewport || !track) return;
 
   const vw = viewport.offsetWidth;
-  const itemW = vw * 0.72;
-  const gap = 16;
+  const itemW = vw * 0.62;
+  const gap = 12;
   const peekOffset = (vw - itemW) / 2;
   const offset = peekOffset - carouselIndex * (itemW + gap);
-
   track.style.transform = `translateX(${offset}px)`;
-
-  // Sync info bar width with active item
-  if (infoBar) {
-    infoBar.style.width = `${itemW}px`;
-    infoBar.style.marginLeft = `${peekOffset}px`;
-  }
 }
 
 function carouselPrev() {
   if (carouselIndex <= 0) return;
   carouselIndex--;
-  updateCarouselSlide();
+  buildCarousel();
 }
 
 function carouselNext() {
   if (carouselIndex >= featuredLive.length - 1) return;
   carouselIndex++;
-  updateCarouselSlide();
+  buildCarousel();
 }
 
 function carouselGoTo(index) {
   if (index === carouselIndex) return;
   carouselIndex = index;
-  updateCarouselSlide();
-}
-
-function updateCarouselSlide() {
-  const hostname = window.location.hostname;
-  document.querySelectorAll('.carousel-item').forEach((el, i) => {
-    const wasActive = el.classList.contains('active');
-    const isActive = i === carouselIndex;
-    el.classList.toggle('active', isActive);
-
-    const media = el.querySelector('.carousel-media');
-    if (isActive && !wasActive) {
-      const s = featuredLive[i];
-      media.innerHTML = `<iframe src="https://player.twitch.tv/?channel=${s.username}&parent=${hostname}&muted=false&autoplay=true"
-        allowfullscreen allow="autoplay; fullscreen"></iframe>`;
-    } else if (!isActive && wasActive) {
-      const s = featuredLive[i];
-      media.innerHTML = s.stream?.thumbnail
-        ? `<img src="${s.stream.thumbnail}?t=${Date.now()}" alt="${escHtml(s.displayName)}" />
-           <div class="carr-overlay">
-             <div class="carr-live-badge">LIVE</div>
-             <div class="carr-viewers">${formatViewers(s.stream?.viewers || 0)} spectateurs</div>
-           </div>`
-        : '<div class="carr-placeholder"></div>';
-    }
-  });
-
-  updateCarouselPosition();
-  updateFeaturedInfoBar();
-  updateNavVisibility();
-}
-
-function updateFeaturedInfoBar() {
-  const s = featuredLive[carouselIndex];
-  if (!s) return;
-
-  const avatarHtml = s.profileImage
-    ? `<img src="${s.profileImage}" alt="${escHtml(s.displayName)}" />`
-    : `<div class="feat-av-ph">${(s.displayName || s.username)[0].toUpperCase()}</div>`;
-
-  const tagsHtml = (s.tags && s.tags.length)
-    ? `<div class="feat-tags">${s.tags.map(t => `<span class="feat-tag">${escHtml(t)}</span>`).join('')}</div>`
-    : '';
-
-  document.getElementById('featured-info-bar').innerHTML = `
-    <div class="feat-info-inner">
-      <div class="feat-info-left">
-        <div class="feat-info-av">${avatarHtml}</div>
-        <div class="feat-info-text">
-          <div class="feat-info-name">${escHtml(s.displayName || s.username)}</div>
-          <div class="feat-info-meta">
-            ${s.stream?.game ? `<span class="feat-info-game">${escHtml(s.stream.game)}</span>` : ''}
-            <span class="feat-info-viewers">
-              <svg viewBox="0 0 16 16" fill="currentColor" width="11" height="11"><path d="M8 2C4.5 2 1.5 4.5 0 8c1.5 3.5 4.5 6 8 6s6.5-2.5 8-6c-1.5-3.5-4.5-6-8-6zm0 10c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-              ${formatViewers(s.stream?.viewers || 0)} spectateurs
-            </span>
-            ${s.stream?.startedAt ? `<span class="feat-info-duration" data-started="${s.stream.startedAt}">${formatDuration(s.stream.startedAt)}</span>` : ''}
-          </div>
-          ${tagsHtml}
-        </div>
-      </div>
-      <a class="feat-twitch-btn" href="${s.twitchUrl}" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M2.149 0L.537 4.119v16.836h5.731V24h3.224l3.045-3.045h4.657l6.269-6.269V0H2.149zm19.164 13.612l-3.582 3.582H12l-3.045 3.045v-3.045H4.119V2.687h17.194v10.925zM14.328 5.373H16.9v7.164h-2.572V5.373zm-6.716 0h2.567v7.164H7.612V5.373z"/></svg>
-        Voir sur Twitch
-      </a>
-    </div>
-    ${s.stream?.title ? `<div class="feat-info-title">${escHtml(s.stream.title)}</div>` : ''}
-  `;
+  buildCarousel();
 }
 
 function updateNavVisibility() {
@@ -191,16 +149,13 @@ function updateNavVisibility() {
   const leftBtn = document.getElementById('carr-left');
   const rightBtn = document.getElementById('carr-right');
   const pills = document.getElementById('feat-nav-pills');
-
-  if (leftBtn) leftBtn.style.display = multi ? 'flex' : 'none';
-  if (rightBtn) rightBtn.style.display = multi ? 'flex' : 'none';
+  if (leftBtn) { leftBtn.style.display = multi ? 'flex' : 'none'; leftBtn.disabled = carouselIndex === 0; }
+  if (rightBtn) { rightBtn.style.display = multi ? 'flex' : 'none'; rightBtn.disabled = carouselIndex === featuredLive.length - 1; }
   if (pills) {
     pills.style.display = multi ? 'flex' : 'none';
     const counter = document.getElementById('feat-counter');
     if (counter) counter.textContent = `${carouselIndex + 1} / ${featuredLive.length}`;
   }
-  if (leftBtn) leftBtn.disabled = carouselIndex === 0;
-  if (rightBtn) rightBtn.disabled = carouselIndex === featuredLive.length - 1;
 }
 
 // ─── Render ───────────────────────────────────────────────────────────────
