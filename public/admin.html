@@ -548,34 +548,114 @@
     .cand-card {
       background: var(--dark2);
       border: 1px solid var(--border-light);
-      border-radius: 12px;
-      padding: 14px 16px;
-      margin-bottom: 8px;
-    }
-
-    .cand-row {
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 6px;
       display: flex;
-      justify-content: space-between;
-      font-size: 0.82rem;
-      margin-bottom: 5px;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.2s;
     }
 
-    .cand-label { color: var(--grey); }
-    .cand-value { font-weight: 600; }
-    .cand-twitch { color: var(--orange); }
+    .cand-card:hover { border-color: #2e2e2e; }
 
-    .cand-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .cand-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--orange-subtle);
+      border: 1px solid rgba(255,107,26,0.3);
+      color: var(--orange);
+      font-size: 0.9rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
 
-    .btn-full {
-      flex: 1;
-      border-radius: 8px;
-      padding: 8px;
-      font-size: 0.8rem;
+    .cand-body { flex: 1; min-width: 0; }
+
+    .cand-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 3px;
+    }
+
+    .cand-twitch { color: var(--orange); font-size: 0.85rem; font-weight: 700; }
+    .cand-name   { color: var(--white);  font-size: 0.82rem; font-weight: 600; }
+    .cand-pseudo { color: var(--grey);   font-size: 0.78rem; }
+
+    .cand-sub {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .cand-email-val { color: var(--grey-light); font-size: 0.73rem; }
+    .cand-no-email  { color: var(--grey);       font-size: 0.72rem; font-style: italic; }
+    .cand-date      { color: var(--grey);        font-size: 0.72rem; }
+
+    .cand-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    .btn-cand {
+      border-radius: 7px;
+      padding: 6px 13px;
+      font-size: 0.75rem;
       font-weight: 700;
       cursor: pointer;
       font-family: inherit;
       border: 1px solid;
       transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    /* Toast notification */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--dark3);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--white);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      animation: toastIn 0.25s ease;
+      pointer-events: auto;
+      max-width: 320px;
+    }
+
+    .toast.success { border-color: rgba(0,200,100,0.3); }
+    .toast.success .toast-icon { color: var(--green); }
+    .toast.warn    { border-color: rgba(255,200,0,0.3); }
+    .toast.warn    .toast-icon { color: #ffc800; }
+    .toast.error   { border-color: rgba(255,59,59,0.3); }
+    .toast.error   .toast-icon { color: #ff6b6b; }
+
+    .toast-icon { font-size: 1rem; flex-shrink: 0; }
+    .toast-mail { font-size: 0.72rem; color: var(--grey-light); margin-top: 1px; }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
     }
   </style>
 </head>
@@ -686,6 +766,9 @@
       </main>
     </div>
   </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toast-container"></div>
 
   <script>
     let adminPassword = null;
@@ -1002,78 +1085,137 @@
           return;
         }
 
-        container.innerHTML = candidates.map(c => `
+        container.innerHTML = candidates.map(c => {
+          const initial = (c.pseudo || c.twitch || '?')[0].toUpperCase();
+          return `
           <div class="cand-card" id="cand-${c.id}">
-            <div class="cand-row">
-              <span class="cand-label">Chaine Twitch</span>
-              <span class="cand-value cand-twitch">@${esc(c.twitch)}</span>
-            </div>
-            <div class="cand-row">
-              <span class="cand-label">Prénom Nom</span>
-              <span class="cand-value">${esc(c.prenom)} ${esc(c.nom)}</span>
-            </div>
-            <div class="cand-row">
-              <span class="cand-label">Pseudo</span>
-              <span class="cand-value">${esc(c.pseudo)}</span>
-            </div>
-            ${c.email ? `
-            <div class="cand-row">
-              <span class="cand-label">E-mail</span>
-              <span class="cand-value">${esc(c.email)}</span>
-            </div>` : ''}
-            <div class="cand-row">
-              <span class="cand-label">Date</span>
-              <span class="cand-value">${new Date(c.date).toLocaleDateString('fr-FR')}</span>
+            <div class="cand-avatar">${initial}</div>
+            <div class="cand-body">
+              <div class="cand-top">
+                <span class="cand-twitch">@${esc(c.twitch)}</span>
+                <span class="cand-name">${esc(c.prenom)} ${esc(c.nom)}</span>
+                <span class="cand-pseudo">· ${esc(c.pseudo)}</span>
+              </div>
+              <div class="cand-sub">
+                ${c.email
+                  ? `<span class="cand-email-val">✉ ${esc(c.email)}</span>`
+                  : `<span class="cand-no-email">Pas d'email</span>`}
+                <span class="cand-date">📅 ${new Date(c.date).toLocaleDateString('fr-FR')}</span>
+              </div>
             </div>
             <div class="cand-actions">
-              <button class="btn-full btn-green" onclick="approveCandidate('${c.id}', '${esc(c.twitch)}')">✓ Accepter</button>
-              <button class="btn-full btn-red" onclick="rejectCandidate('${c.id}')">✕ Refuser</button>
+              <button class="btn-cand btn-green" id="btn-acc-${c.id}"
+                      onclick="approveCandidate('${c.id}','${esc(c.twitch)}',${!!c.email})">✓ Accepter</button>
+              <button class="btn-cand btn-red"   id="btn-ref-${c.id}"
+                      onclick="rejectCandidate('${c.id}',${!!c.email})">✕ Refuser</button>
             </div>
-          </div>
-        `).join('');
+          </div>`;
+        }).join('');
       } catch {
         document.getElementById('candidates-list').innerHTML = '<div class="empty-state">Erreur.</div>';
       }
     }
 
-    async function approveCandidate(id, twitch) {
-      const btn = document.querySelector(`#cand-${id} .btn-green`);
+    async function approveCandidate(id, twitch, hasEmail) {
+      const btn = document.getElementById(`btn-acc-${id}`);
+      const btnR = document.getElementById(`btn-ref-${id}`);
       if (btn) { btn.disabled = true; btn.textContent = '...'; }
+      if (btnR) btnR.disabled = true;
 
       try {
-        const res = await fetch('/api/streamers', {
+        // 1. Ajouter le streamer
+        const addRes = await fetch('/api/streamers', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
           body: JSON.stringify({ username: twitch })
         });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          await rejectCandidate(id);
-          await loadStreamers();
-        } else {
-          alert(data.error || "Erreur lors de l'ajout.");
+        const addData = await addRes.json();
+        if (!addRes.ok) {
+          showToast('error', '✕', addData.error || "Erreur lors de l'ajout.");
           if (btn) { btn.disabled = false; btn.textContent = '✓ Accepter'; }
+          if (btnR) btnR.disabled = false;
+          return;
         }
+
+        // 2. Notifier (mail + suppression candidature)
+        const notifRes = await fetch(`/api/candidates/${id}/notify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+          body: JSON.stringify({ action: 'accept' })
+        });
+        const notif = await notifRes.json();
+
+        if (notif.sent) {
+          showToast('success', '✓', `${addData.streamer?.displayName || twitch} ajouté`, 'Email de confirmation envoyé ✉');
+        } else if (hasEmail && notif.reason === 'smtp-error') {
+          showToast('warn', '⚠', `${addData.streamer?.displayName || twitch} ajouté`, 'Email non envoyé (erreur SMTP)');
+        } else {
+          showToast('success', '✓', `${addData.streamer?.displayName || twitch} ajouté`);
+        }
+
+        removeCandCard(id);
+        await loadStreamers();
       } catch {
-        alert('Erreur serveur.');
+        showToast('error', '✕', 'Erreur serveur');
         if (btn) { btn.disabled = false; btn.textContent = '✓ Accepter'; }
+        if (btnR) btnR.disabled = false;
       }
     }
 
-    async function rejectCandidate(id) {
-      await fetch(`/api/candidates/${id}`, {
-        method: 'DELETE',
-        headers: { 'x-admin-password': adminPassword }
-      });
+    async function rejectCandidate(id, hasEmail) {
+      const btn = document.getElementById(`btn-ref-${id}`);
+      const btnA = document.getElementById(`btn-acc-${id}`);
+      if (btn) { btn.disabled = true; btn.textContent = '...'; }
+      if (btnA) btnA.disabled = true;
+
+      try {
+        const notifRes = await fetch(`/api/candidates/${id}/notify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+          body: JSON.stringify({ action: 'reject' })
+        });
+        const notif = await notifRes.json();
+
+        if (notif.sent) {
+          showToast('success', '✓', 'Candidature refusée', 'Email de notification envoyé ✉');
+        } else {
+          showToast('success', '✓', 'Candidature refusée');
+        }
+
+        removeCandCard(id);
+      } catch {
+        showToast('error', '✕', 'Erreur serveur');
+        if (btn) { btn.disabled = false; btn.textContent = '✕ Refuser'; }
+        if (btnA) btnA.disabled = false;
+      }
+    }
+
+    function removeCandCard(id) {
       document.getElementById(`cand-${id}`)?.remove();
       const list = document.getElementById('candidates-list');
       const remaining = list?.querySelectorAll('.cand-card').length || 0;
       document.getElementById('nav-cand-count').textContent = remaining;
-      if (remaining === 0) {
-        list.innerHTML = '<div class="empty-state">Aucune candidature en attente.</div>';
-      }
+      if (remaining === 0) list.innerHTML = '<div class="empty-state">Aucune candidature en attente.</div>';
+    }
+
+    // ─── Toast ───────────────────────────────────────────────────────────
+    function showToast(type, icon, message, sub = '') {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `
+        <span class="toast-icon">${icon}</span>
+        <div>
+          <div>${message}</div>
+          ${sub ? `<div class="toast-mail">${sub}</div>` : ''}
+        </div>`;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.transition = 'opacity 0.3s, transform 0.3s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(6px)';
+        setTimeout(() => el.remove(), 300);
+      }, 3500);
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────

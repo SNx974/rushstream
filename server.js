@@ -3,6 +3,7 @@ const express = require('express');
 const fetch = require('node-fetch');
 const path = require('path');
 const { Pool } = require('pg');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -124,6 +125,199 @@ async function getTwitchToken() {
   twitchToken = data.access_token;
   tokenExpiry = Date.now() + (data.expires_in - 300) * 1000;
   return twitchToken;
+}
+
+// ─── Mailer ──────────────────────────────────────────────────────────────────
+function createTransporter() {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+  });
+}
+
+function buildAcceptEmailHtml(c) {
+  const name = c.prenom ? `${c.prenom}` : c.pseudo;
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0f0f0;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:32px 16px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.15);">
+
+  <!-- Header sombre -->
+  <tr>
+    <td style="background:#0e0e0e;padding:28px 32px;text-align:center;">
+      <div style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;margin-bottom:4px;">
+        Rush<span style="color:#FF6B1A;">Stream</span>
+        <span style="font-size:14px;font-weight:600;color:#555;margin-left:4px;">974</span>
+      </div>
+      <div style="font-size:11px;color:#444;letter-spacing:1.5px;text-transform:uppercase;">Île de La Réunion</div>
+    </td>
+  </tr>
+
+  <!-- Barre orange dégradée -->
+  <tr><td style="background:linear-gradient(90deg,#FF6B1A 0%,#ff9a52 100%);height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+
+  <!-- Corps blanc -->
+  <tr>
+    <td style="background:#ffffff;padding:36px 32px 28px;">
+
+      <!-- Icône succès -->
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="display:inline-block;width:60px;height:60px;border-radius:50%;background:#fff5ef;border:2px solid #FF6B1A;line-height:60px;font-size:26px;">🎉</div>
+      </div>
+
+      <h1 style="margin:0 0 10px;font-size:1.35rem;font-weight:900;color:#0e0e0e;text-align:center;">
+        Bienvenue sur RushStream 974 !
+      </h1>
+      <p style="margin:0 0 24px;font-size:0.88rem;color:#666;text-align:center;line-height:1.6;">
+        Salut <strong style="color:#0e0e0e;">${name}</strong>,<br>
+        ta candidature a été <strong style="color:#FF6B1A;">acceptée</strong> — tu fais maintenant partie<br>
+        de la communauté des streamers réunionnais 🔥
+      </p>
+
+      <!-- Badge Twitch -->
+      <div style="background:#f7f7f7;border-radius:10px;padding:16px 20px;margin-bottom:28px;text-align:center;">
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#999;margin-bottom:6px;">Ta chaîne Twitch</div>
+        <div style="font-size:1.05rem;font-weight:800;color:#FF6B1A;">@${c.twitch}</div>
+      </div>
+
+      <p style="margin:0 0 28px;font-size:0.83rem;color:#777;line-height:1.7;text-align:center;">
+        Ton profil apparaît désormais sur le site en temps réel.<br>
+        Quand tu stream, tu seras visible dans la liste <strong style="color:#0e0e0e;">En live</strong> automatiquement.
+      </p>
+
+      <!-- CTA -->
+      <div style="text-align:center;margin-bottom:8px;">
+        <a href="https://rushstream.rushxp.fr" style="display:inline-block;background:linear-gradient(135deg,#FF6B1A,#ff8c42);color:#ffffff;text-decoration:none;font-weight:800;font-size:0.9rem;padding:14px 32px;border-radius:10px;letter-spacing:0.2px;">
+          Voir ma chaîne sur le site →
+        </a>
+      </div>
+
+    </td>
+  </tr>
+
+  <!-- Footer -->
+  <tr>
+    <td style="background:#f9f9f9;border-top:1px solid #eee;padding:18px 32px;text-align:center;">
+      <p style="margin:0;font-size:11px;color:#aaa;">
+        RushStream 974 · Île de La Réunion · <a href="https://rushstream.rushxp.fr" style="color:#FF6B1A;text-decoration:none;">rushstream.rushxp.fr</a>
+      </p>
+      <p style="margin:6px 0 0;font-size:11px;color:#ccc;">Fait avec ❤️ pour la communauté réunionnaise</p>
+    </td>
+  </tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+function buildRejectEmailHtml(c) {
+  const name = c.prenom ? `${c.prenom}` : c.pseudo;
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0f0f0;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:32px 16px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.15);">
+
+  <!-- Header sombre -->
+  <tr>
+    <td style="background:#0e0e0e;padding:28px 32px;text-align:center;">
+      <div style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;margin-bottom:4px;">
+        Rush<span style="color:#FF6B1A;">Stream</span>
+        <span style="font-size:14px;font-weight:600;color:#555;margin-left:4px;">974</span>
+      </div>
+      <div style="font-size:11px;color:#444;letter-spacing:1.5px;text-transform:uppercase;">Île de La Réunion</div>
+    </td>
+  </tr>
+
+  <!-- Barre orange -->
+  <tr><td style="background:linear-gradient(90deg,#FF6B1A 0%,#ff9a52 100%);height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+
+  <!-- Corps blanc -->
+  <tr>
+    <td style="background:#ffffff;padding:36px 32px 28px;">
+
+      <!-- Icône -->
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="display:inline-block;width:60px;height:60px;border-radius:50%;background:#fafafa;border:2px solid #ddd;line-height:60px;font-size:24px;">📋</div>
+      </div>
+
+      <h1 style="margin:0 0 10px;font-size:1.25rem;font-weight:900;color:#0e0e0e;text-align:center;">
+        Merci pour ta candidature
+      </h1>
+      <p style="margin:0 0 24px;font-size:0.88rem;color:#666;text-align:center;line-height:1.6;">
+        Salut <strong style="color:#0e0e0e;">${name}</strong>,<br>
+        après examen, ta candidature pour <strong style="color:#FF6B1A;">@${c.twitch}</strong><br>
+        n'a pas pu être retenue pour le moment.
+      </p>
+
+      <!-- Encart info -->
+      <div style="background:#f7f7f7;border-left:3px solid #FF6B1A;border-radius:0 8px 8px 0;padding:14px 18px;margin-bottom:28px;">
+        <p style="margin:0;font-size:0.82rem;color:#555;line-height:1.6;">
+          Cela ne signifie pas que ta chaîne n'est pas intéressante —
+          il peut s'agir d'un critère de zone géographique ou d'activité récente sur Twitch.
+          N'hésite pas à repostuler plus tard !
+        </p>
+      </div>
+
+      <!-- CTA -->
+      <div style="text-align:center;margin-bottom:8px;">
+        <a href="https://rushstream.rushxp.fr" style="display:inline-block;background:#0e0e0e;color:#ffffff;text-decoration:none;font-weight:700;font-size:0.88rem;padding:13px 28px;border-radius:10px;">
+          Voir le site →
+        </a>
+      </div>
+
+    </td>
+  </tr>
+
+  <!-- Footer -->
+  <tr>
+    <td style="background:#f9f9f9;border-top:1px solid #eee;padding:18px 32px;text-align:center;">
+      <p style="margin:0;font-size:11px;color:#aaa;">
+        RushStream 974 · Île de La Réunion · <a href="https://rushstream.rushxp.fr" style="color:#FF6B1A;text-decoration:none;">rushstream.rushxp.fr</a>
+      </p>
+      <p style="margin:6px 0 0;font-size:11px;color:#ccc;">Fait avec ❤️ pour la communauté réunionnaise</p>
+    </td>
+  </tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+async function sendCandidateNotification(candidateId, action) {
+  const r = await pool.query('SELECT * FROM candidates WHERE id = $1', [candidateId]);
+  if (r.rows.length === 0) return { sent: false, reason: 'not-found' };
+  const c = r.rows[0];
+  if (!c.email) return { sent: false, reason: 'no-email' };
+
+  const transporter = createTransporter();
+  if (!transporter) return { sent: false, reason: 'no-smtp' };
+
+  const subject = action === 'accept'
+    ? '🎉 Ta chaîne est sur RushStream 974 !'
+    : 'Suite à ta candidature RushStream 974';
+  const html = action === 'accept' ? buildAcceptEmailHtml(c) : buildRejectEmailHtml(c);
+
+  try {
+    await transporter.sendMail({
+      from: `RushStream 974 <${process.env.MAIL_FROM || process.env.SMTP_USER}>`,
+      to: c.email,
+      subject,
+      html
+    });
+    return { sent: true };
+  } catch (err) {
+    console.error('Erreur envoi mail:', err.message);
+    return { sent: false, reason: 'smtp-error', error: err.message };
+  }
 }
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
@@ -282,6 +476,21 @@ app.delete('/api/candidates/:id', async (req, res) => {
   if (!checkAdmin(req, res)) return;
   await removeCandidate(req.params.id);
   res.json({ success: true });
+});
+
+// POST /api/candidates/:id/notify — envoie email + supprime la candidature
+app.post('/api/candidates/:id/notify', async (req, res) => {
+  if (!checkAdmin(req, res)) return;
+  const { action } = req.body; // 'accept' | 'reject'
+  if (!['accept', 'reject'].includes(action))
+    return res.status(400).json({ error: 'action invalide' });
+  try {
+    const mailResult = await sendCandidateNotification(req.params.id, action);
+    await removeCandidate(req.params.id);
+    res.json({ success: true, ...mailResult });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // GET /admin
