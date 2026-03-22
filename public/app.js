@@ -3,6 +3,7 @@ let allStreamers = [];
 let currentFilter = 'all';
 let adminPassword = null;
 let refreshInterval = null;
+let currentFeaturedUsername = null;
 
 // ─── Init ─────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -19,6 +20,7 @@ async function loadStreamers() {
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     allStreamers = data;
+    renderFeatured(data);
     renderGrid(currentFilter);
     updateCounts();
     hideError();
@@ -26,6 +28,102 @@ async function loadStreamers() {
     showError('Impossible de charger les streamers. Vérifiez que le serveur est lancé et que les clés Twitch sont configurées.');
     console.error(err);
   }
+}
+
+// ─── Featured ─────────────────────────────────────────────────────────────
+function renderFeatured(streamers) {
+  const liveFeatures = streamers.filter(s => s.featured && s.isLive);
+  const section = document.getElementById('featured-section');
+
+  if (liveFeatures.length === 0) {
+    section.style.display = 'none';
+    currentFeaturedUsername = null;
+    return;
+  }
+
+  section.style.display = 'block';
+
+  // Si le streamer actuel n'est plus live, on remet le premier
+  if (!currentFeaturedUsername || !liveFeatures.find(s => s.username === currentFeaturedUsername)) {
+    currentFeaturedUsername = liveFeatures[0].username;
+  }
+
+  renderFeaturedPlayer(currentFeaturedUsername, liveFeatures);
+}
+
+function renderFeaturedPlayer(username, liveFeatures) {
+  currentFeaturedUsername = username;
+  const main = liveFeatures.find(s => s.username === username) || liveFeatures[0];
+  const others = liveFeatures.filter(s => s.username !== main.username);
+  const hostname = window.location.hostname;
+
+  // Player principal
+  document.getElementById('featured-player').innerHTML = `
+    <iframe
+      src="https://player.twitch.tv/?channel=${main.username}&parent=${hostname}&muted=false&autoplay=true"
+      allowfullscreen
+      allow="autoplay; fullscreen">
+    </iframe>
+  `;
+
+  // Infos streamer principal
+  const avatarHtml = main.profileImage
+    ? `<img src="${main.profileImage}" alt="${escHtml(main.displayName)}" />`
+    : `<div class="feat-avatar-placeholder">${(main.displayName||main.username)[0].toUpperCase()}</div>`;
+
+  document.getElementById('featured-main-info').innerHTML = `
+    <div class="feat-info-top">
+      <div class="feat-avatar">${avatarHtml}</div>
+      <div class="feat-text">
+        <div class="feat-name">${escHtml(main.displayName || main.username)}</div>
+        ${main.stream?.game ? `<div class="feat-game">${escHtml(main.stream.game)}</div>` : ''}
+        <div class="feat-viewers">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2C4.5 2 1.5 4.5 0 8c1.5 3.5 4.5 6 8 6s6.5-2.5 8-6c-1.5-3.5-4.5-6-8-6zm0 10c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+          ${formatViewers(main.stream?.viewers || 0)} spectateurs
+        </div>
+      </div>
+      <a class="feat-twitch-btn" href="${main.twitchUrl}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.149 0L.537 4.119v16.836h5.731V24h3.224l3.045-3.045h4.657l6.269-6.269V0H2.149zm19.164 13.612l-3.582 3.582H12l-3.045 3.045v-3.045H4.119V2.687h17.194v10.925zM14.328 5.373H16.9v7.164h-2.572V5.373zm-6.716 0h2.567v7.164H7.612V5.373z"/></svg>
+        Voir sur Twitch
+      </a>
+    </div>
+    ${main.stream?.title ? `<div class="feat-title">${escHtml(main.stream.title)}</div>` : ''}
+  `;
+
+  // Sidebar autres streamers
+  const sideEl = document.getElementById('featured-side');
+  if (others.length === 0) {
+    sideEl.innerHTML = '';
+    return;
+  }
+
+  sideEl.innerHTML = others.map(s => `
+    <div class="feat-side-card ${s.username === username ? 'active' : ''}"
+         onclick="renderFeaturedPlayer('${s.username}', window._liveFeatures || [])">
+      <div class="feat-side-thumb">
+        ${s.stream?.thumbnail
+          ? `<img src="${s.stream.thumbnail}?t=${Date.now()}" alt="${escHtml(s.displayName)}" />`
+          : '<div class="feat-side-thumb-placeholder"></div>'}
+        <div class="feat-side-live">LIVE</div>
+        <div class="feat-side-viewers">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2C4.5 2 1.5 4.5 0 8c1.5 3.5 4.5 6 8 6s6.5-2.5 8-6c-1.5-3.5-4.5-6-8-6zm0 10c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+          ${formatViewers(s.stream?.viewers || 0)}
+        </div>
+      </div>
+      <div class="feat-side-info">
+        <div class="feat-side-avatar">
+          ${s.profileImage ? `<img src="${s.profileImage}" alt="${escHtml(s.displayName)}" />` : `<div class="feat-side-avatar-ph">${(s.displayName||s.username)[0].toUpperCase()}</div>`}
+        </div>
+        <div class="feat-side-text">
+          <div class="feat-side-name">${escHtml(s.displayName || s.username)}</div>
+          ${s.stream?.game ? `<div class="feat-side-game">${escHtml(s.stream.game)}</div>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Stocke pour onclick
+  window._liveFeatures = liveFeatures;
 }
 
 // ─── Render ───────────────────────────────────────────────────────────────

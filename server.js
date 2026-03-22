@@ -103,6 +103,7 @@ app.get('/api/streamers', async (req, res) => {
         displayName: user.display_name || streamer.displayName || streamer.username,
         profileImage: user.profile_image_url || null,
         tags: streamer.tags || [],
+        featured: streamer.featured || false,
         isLive: !!stream,
         stream: stream ? {
           title: stream.title,
@@ -253,6 +254,18 @@ app.delete('/api/candidates/:id', (req, res) => {
 app.get('/api/streamers/raw', (req, res) => {
   if (!checkAdmin(req, res)) return;
   res.json(loadStreamers());
+});
+
+// PATCH /api/streamers/:id/featured — mettre en avant (admin)
+app.patch('/api/streamers/:id/featured', (req, res) => {
+  if (!checkAdmin(req, res)) return;
+  const { featured } = req.body;
+  const streamers = loadStreamers();
+  const idx = streamers.findIndex(s => s.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Streamer introuvable' });
+  streamers[idx].featured = !!featured;
+  saveStreamers(streamers);
+  res.json({ success: true, featured: streamers[idx].featured });
 });
 
 // PATCH /api/streamers/:id/tags — mettre à jour les tags (admin)
