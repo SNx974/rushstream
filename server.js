@@ -102,6 +102,7 @@ app.get('/api/streamers', async (req, res) => {
         username: streamer.username,
         displayName: user.display_name || streamer.displayName || streamer.username,
         profileImage: user.profile_image_url || null,
+        tags: streamer.tags || [],
         isLive: !!stream,
         stream: stream ? {
           title: stream.title,
@@ -252,6 +253,26 @@ app.delete('/api/candidates/:id', (req, res) => {
 app.get('/api/streamers/raw', (req, res) => {
   if (!checkAdmin(req, res)) return;
   res.json(loadStreamers());
+});
+
+// PATCH /api/streamers/:id/tags — mettre à jour les tags (admin)
+app.patch('/api/streamers/:id/tags', (req, res) => {
+  if (!checkAdmin(req, res)) return;
+  const { tags } = req.body;
+  if (!Array.isArray(tags)) return res.status(400).json({ error: 'Tags invalides' });
+
+  const streamers = loadStreamers();
+  const idx = streamers.findIndex(s => s.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Streamer introuvable' });
+
+  streamers[idx].tags = tags.map(t => String(t).trim().toLowerCase()).filter(Boolean);
+  saveStreamers(streamers);
+  res.json({ success: true, tags: streamers[idx].tags });
+});
+
+// GET /admin — page admin dédiée
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 // ─── Start ─────────────────────────────────────────────────────────────────

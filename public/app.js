@@ -87,6 +87,10 @@ function buildCard(s) {
        ${liveDuration}`
     : `<div class="card-offline-status">Hors ligne</div>`;
 
+  const tagsHtml = (s.tags && s.tags.length)
+    ? `<div class="card-tags">${s.tags.map(t => `<span class="card-tag">${escHtml(t)}</span>`).join('')}</div>`
+    : '';
+
   return `
     <div class="streamer-card ${s.isLive ? 'live' : ''}" onclick="openTwitch('${s.twitchUrl}')">
       <div class="card-thumbnail">
@@ -99,6 +103,7 @@ function buildCard(s) {
         <div class="card-info">
           <div class="card-name">${statusDot} ${escHtml(s.displayName || s.username)}</div>
           ${subInfo}
+          ${tagsHtml}
         </div>
         <a class="card-twitch-link" href="${s.twitchUrl}" target="_blank" rel="noopener"
            onclick="event.stopPropagation()" title="Ouvrir sur Twitch">

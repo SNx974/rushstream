@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — RushStream 974</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #FF6B1A;
+      --orange-dark: #D94E00;
+      --orange-faint: rgba(255,107,26,0.08);
+      --orange-subtle: rgba(255,107,26,0.15);
+      --orange-glow: rgba(255,107,26,0.4);
+      --black: #080808;
+      --dark: #101010;
+      --dark2: #141414;
+      --dark3: #1a1a1a;
+      --border: #1e1e1e;
+      --border-light: #2a2a2a;
+      --white: #F0F0F0;
+      --grey: #666;
+      --grey-light: #999;
+      --live-red: #FF3B3B;
+      --green: #00C864;
+      --green-faint: rgba(0,200,100,0.12);
+      --red-faint: rgba(255,59,59,0.1);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--black);
+      color: var(--white);
+      min-height: 100vh;
+    }
+
+    /* ─── LOGIN ──────────────────────────────────────────────────── */
+    .login-page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255,107,26,0.08) 0%, transparent 60%);
+    }
+
+    .login-box {
+      background: var(--dark2);
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      width: 340px;
+      text-align: center;
+    }
+
+    .login-logo {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+      margin-bottom: 1.25rem;
+      filter: drop-shadow(0 0 12px var(--orange-glow));
+    }
+
+    .login-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+    }
+
+    .login-title span { color: var(--orange); }
+
+    .login-sub {
+      color: var(--grey);
+      font-size: 0.82rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .login-input {
+      width: 100%;
+      background: var(--dark);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      color: var(--white);
+      padding: 13px 16px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      margin-bottom: 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .login-input:focus { border-color: var(--orange); }
+
+    .login-btn {
+      width: 100%;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 13px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .login-btn:hover { opacity: 0.88; }
+    .login-btn:active { transform: scale(0.98); }
+
+    .login-error {
+      color: #ff6b6b;
+      font-size: 0.82rem;
+      margin-top: 0.75rem;
+      display: none;
+    }
+
+    /* ─── DASHBOARD ──────────────────────────────────────────────── */
+    .dashboard { display: none; flex-direction: column; min-height: 100vh; }
+    .dashboard.visible { display: flex; }
+
+    /* Header */
+    .admin-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 62px;
+      background: rgba(8,8,8,0.92);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .admin-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--orange-glow), transparent);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-left img {
+      height: 30px;
+      width: auto;
+      filter: drop-shadow(0 0 8px var(--orange-glow));
+    }
+
+    .header-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+
+    .header-title span { color: var(--orange); }
+
+    .header-divider {
+      width: 1px;
+      height: 18px;
+      background: var(--border-light);
+    }
+
+    .header-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--grey);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-back {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--grey);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      background: transparent;
+      transition: all 0.2s;
+    }
+
+    .btn-back:hover { color: var(--white); border-color: var(--grey); }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid var(--border-light);
+      color: var(--grey);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover { border-color: #ff6b6b; color: #ff6b6b; }
+
+    /* Main layout */
+    .admin-main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 1.5rem;
+      padding: 1.75rem 2rem;
+      max-width: 1300px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Panels */
+    .panel {
+      background: var(--dark2);
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--dark);
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--grey-light);
+    }
+
+    .panel-count {
+      background: var(--orange);
+      color: #fff;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .panel-body {
+      padding: 1.25rem 1.5rem;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    /* Add streamer form */
+    .add-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .form-input {
+      flex: 1;
+      background: var(--dark);
+      border: 1px solid var(--border-light);
+      border-radius: 9px;
+      color: var(--white);
+      padding: 10px 14px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus { border-color: var(--orange); }
+    .form-input::placeholder { color: var(--grey); }
+
+    .btn-add {
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      padding: 10px 18px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+
+    .btn-add:hover { opacity: 0.85; }
+    .btn-add:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .msg {
+      font-size: 0.8rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .msg.error { color: #ff6b6b; background: var(--red-faint); border: 1px solid rgba(255,59,59,0.2); }
+    .msg.success { color: var(--green); background: var(--green-faint); border: 1px solid rgba(0,200,100,0.2); }
+
+    /* Streamer items */
+    .streamer-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .streamer-item {
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--dark3);
+      transition: border-color 0.2s;
+    }
+
+    .streamer-item:hover { border-color: rgba(255,107,26,0.25); }
+
+    .streamer-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      gap: 10px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-dot.live { background: var(--live-red); box-shadow: 0 0 5px var(--live-red); }
+    .status-dot.offline { background: #333; }
+
+    .streamer-info { flex: 1; min-width: 0; }
+
+    .s-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .s-login {
+      font-size: 0.73rem;
+      color: var(--grey);
+    }
+
+    .streamer-btns {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-sm {
+      border-radius: 7px;
+      padding: 5px 11px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      border: 1px solid;
+      transition: all 0.2s;
+    }
+
+    .btn-tag-toggle {
+      background: var(--orange-faint);
+      border-color: rgba(255,107,26,0.3);
+      color: var(--orange);
+    }
+
+    .btn-tag-toggle:hover, .btn-tag-toggle.active {
+      background: var(--orange-subtle);
+      border-color: var(--orange);
+    }
+
+    .btn-del {
+      background: var(--red-faint);
+      border-color: rgba(255,59,59,0.25);
+      color: #ff6b6b;
+    }
+
+    .btn-del:hover { background: rgba(255,59,59,0.18); }
+
+    /* Tag editor */
+    .tag-editor {
+      border-top: 1px solid var(--border);
+      padding: 12px 14px;
+      background: rgba(255,107,26,0.03);
+      display: none;
+    }
+
+    .tag-editor.open { display: block; }
+
+    .tag-editor-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--grey);
+      margin-bottom: 8px;
+    }
+
+    .tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 10px;
+      min-height: 24px;
+    }
+
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--orange-subtle);
+      border: 1px solid rgba(255,107,26,0.35);
+      color: var(--orange);
+      border-radius: 999px;
+      padding: 3px 10px 3px 10px;
+      font-size: 0.73rem;
+      font-weight: 600;
+    }
+
+    .tag-chip button {
+      background: none;
+      border: none;
+      color: var(--orange);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+
+    .tag-chip button:hover { opacity: 1; }
+
+    .no-tags {
+      color: var(--grey);
+      font-size: 0.78rem;
+      font-style: italic;
+    }
+
+    .tag-add-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tag-input {
+      flex: 1;
+      background: var(--dark2);
+      border: 1px solid var(--border-light);
+      border-radius: 7px;
+      color: var(--white);
+      padding: 7px 10px;
+      font-size: 0.8rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .tag-input:focus { border-color: var(--orange); }
+    .tag-input::placeholder { color: var(--grey); }
+
+    .btn-tag-add {
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 7px 13px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.2s;
+    }
+
+    .btn-tag-add:hover { opacity: 0.85; }
+
+    /* Candidate cards */
+    .candidate-card {
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 8px;
+      background: var(--dark3);
+    }
+
+    .cand-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 5px;
+      font-size: 0.82rem;
+    }
+
+    .cand-label { color: var(--grey); }
+    .cand-value { color: var(--white); font-weight: 600; }
+    .cand-twitch { color: var(--orange); font-weight: 700; }
+
+    .cand-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn-approve {
+      flex: 1;
+      background: var(--green-faint);
+      border: 1px solid rgba(0,200,100,0.3);
+      color: var(--green);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .btn-approve:hover { background: rgba(0,200,100,0.2); }
+
+    .btn-reject {
+      flex: 1;
+      background: var(--red-faint);
+      border: 1px solid rgba(255,59,59,0.25);
+      color: #ff6b6b;
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .btn-reject:hover { background: rgba(255,59,59,0.18); }
+
+    .empty-state {
+      text-align: center;
+      color: var(--grey);
+      font-size: 0.85rem;
+      padding: 2.5rem 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .admin-main {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Login ──────────────────────────────────────────────────────────── -->
+  <div class="login-page" id="login-page">
+    <div class="login-box">
+      <img src="rushxp.png" alt="RushXP" class="login-logo" />
+      <div class="login-title">Rush<span>Stream</span> · Admin</div>
+      <div class="login-sub">Île de La Réunion · 974 — Accès restreint</div>
+      <input type="password" class="login-input" id="pwd-input"
+             placeholder="Mot de passe"
+             onkeydown="if(event.key==='Enter') login()" />
+      <button class="login-btn" onclick="login()">Se connecter</button>
+      <div class="login-error" id="login-error">Mot de passe incorrect.</div>
+    </div>
+  </div>
+
+  <!-- ─── Dashboard ──────────────────────────────────────────────────────── -->
+  <div class="dashboard" id="dashboard">
+
+    <header class="admin-header">
+      <div class="header-left">
+        <img src="rushxp.png" alt="RushXP" />
+        <div class="header-title">Rush<span>Stream</span></div>
+        <div class="header-divider"></div>
+        <div class="header-badge">Espace Admin</div>
+      </div>
+      <div class="header-right">
+        <a href="/" class="btn-back">← Retour au site</a>
+        <button class="btn-logout" onclick="logout()">Déconnexion</button>
+      </div>
+    </header>
+
+    <main class="admin-main">
+
+      <!-- ─── Panel Streamers ─────────────────────────────────────────────── -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Gestion des streamers</span>
+          <span class="panel-count" id="streamers-count">0</span>
+        </div>
+        <div class="panel-body">
+
+          <!-- Ajouter -->
+          <div class="add-form">
+            <input type="text" class="form-input" id="add-input"
+                   placeholder="Nom d'utilisateur Twitch..."
+                   onkeydown="if(event.key==='Enter') addStreamer()" />
+            <button class="btn-add" id="add-btn" onclick="addStreamer()">+ Ajouter</button>
+          </div>
+          <div class="msg error" id="add-error"></div>
+          <div class="msg success" id="add-success"></div>
+
+          <!-- Liste -->
+          <div class="streamer-list" id="streamer-list">
+            <div class="empty-state">Chargement...</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ─── Panel Candidatures ─────────────────────────────────────────── -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Candidatures</span>
+          <span class="panel-count" id="candidates-count">0</span>
+        </div>
+        <div class="panel-body">
+          <div id="candidates-list">
+            <div class="empty-state">Chargement...</div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    let adminPassword = null;
+    let streamersData = [];
+
+    // ─── Login ────────────────────────────────────────────────────────────
+    async function login() {
+      const pwd = document.getElementById('pwd-input').value;
+      if (!pwd) return;
+
+      const errEl = document.getElementById('login-error');
+      errEl.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwd })
+        });
+
+        if (res.ok) {
+          adminPassword = pwd;
+          document.getElementById('login-page').style.display = 'none';
+          document.getElementById('dashboard').classList.add('visible');
+          loadAll();
+        } else {
+          errEl.style.display = 'block';
+          document.getElementById('pwd-input').value = '';
+          document.getElementById('pwd-input').focus();
+        }
+      } catch {
+        errEl.textContent = 'Erreur de connexion au serveur.';
+        errEl.style.display = 'block';
+      }
+    }
+
+    function logout() {
+      adminPassword = null;
+      streamersData = [];
+      document.getElementById('login-page').style.display = 'flex';
+      document.getElementById('dashboard').classList.remove('visible');
+      document.getElementById('pwd-input').value = '';
+    }
+
+    function loadAll() {
+      loadStreamers();
+      loadCandidates();
+    }
+
+    // ─── Streamers ────────────────────────────────────────────────────────
+    async function loadStreamers() {
+      try {
+        const res = await fetch('/api/streamers/raw', {
+          headers: { 'x-admin-password': adminPassword }
+        });
+        streamersData = await res.json();
+        document.getElementById('streamers-count').textContent = streamersData.length;
+        renderStreamers();
+      } catch {
+        document.getElementById('streamer-list').innerHTML = '<div class="empty-state">Erreur de chargement.</div>';
+      }
+    }
+
+    function renderStreamers() {
+      const container = document.getElementById('streamer-list');
+      if (streamersData.length === 0) {
+        container.innerHTML = '<div class="empty-state">Aucun streamer enregistré.</div>';
+        return;
+      }
+      container.innerHTML = streamersData.map(s => buildStreamerItem(s)).join('');
+    }
+
+    function buildStreamerItem(s) {
+      const tags = s.tags || [];
+
+      const tagsHtml = tags.length
+        ? tags.map(t => `
+            <span class="tag-chip">
+              ${esc(t)}
+              <button onclick="removeTag('${s.id}', '${esc(t)}')" title="Supprimer ce tag">×</button>
+            </span>
+          `).join('')
+        : '<span class="no-tags">Aucun tag</span>';
+
+      return `
+        <div class="streamer-item" id="item-${s.id}">
+          <div class="streamer-header">
+            <div class="status-dot offline" id="dot-${s.id}"></div>
+            <div class="streamer-info">
+              <div class="s-name">${esc(s.displayName || s.username)}</div>
+              <div class="s-login">@${esc(s.username)}</div>
+            </div>
+            <div class="streamer-btns">
+              <button class="btn-sm btn-tag-toggle" id="tagtoggle-${s.id}"
+                      onclick="toggleTags('${s.id}')">Tags</button>
+              <button class="btn-sm btn-del"
+                      onclick="deleteStreamer('${s.id}', '${esc(s.displayName || s.username)}')">Suppr.</button>
+            </div>
+          </div>
+          <div class="tag-editor" id="tags-${s.id}">
+            <div class="tag-editor-title">Tags affichés sur le site</div>
+            <div class="tags-wrap" id="taglist-${s.id}">${tagsHtml}</div>
+            <div class="tag-add-row">
+              <input type="text" class="tag-input" id="taginput-${s.id}"
+                     placeholder="Nouveau tag..."
+                     onkeydown="if(event.key==='Enter') addTag('${s.id}')" />
+              <button class="btn-tag-add" onclick="addTag('${s.id}')">+</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleTags(id) {
+      const editor = document.getElementById(`tags-${id}`);
+      const btn = document.getElementById(`tagtoggle-${id}`);
+      const isOpen = editor.classList.toggle('open');
+      btn.classList.toggle('active', isOpen);
+      if (isOpen) {
+        setTimeout(() => document.getElementById(`taginput-${id}`)?.focus(), 50);
+      }
+    }
+
+    async function addTag(streamerId) {
+      const input = document.getElementById(`taginput-${streamerId}`);
+      const tag = input.value.trim().toLowerCase().replace(/\s+/g, '-');
+      if (!tag) return;
+
+      const streamer = streamersData.find(s => s.id === streamerId);
+      if (!streamer) return;
+
+      const tags = [...(streamer.tags || [])];
+      if (tags.includes(tag)) { input.value = ''; return; }
+      tags.push(tag);
+      input.value = '';
+      await saveTags(streamerId, tags);
+    }
+
+    async function removeTag(streamerId, tag) {
+      const streamer = streamersData.find(s => s.id === streamerId);
+      if (!streamer) return;
+      const tags = (streamer.tags || []).filter(t => t !== tag);
+      await saveTags(streamerId, tags);
+    }
+
+    async function saveTags(streamerId, tags) {
+      try {
+        const res = await fetch(`/api/streamers/${streamerId}/tags`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': adminPassword
+          },
+          body: JSON.stringify({ tags })
+        });
+
+        if (res.ok) {
+          const streamer = streamersData.find(s => s.id === streamerId);
+          if (streamer) streamer.tags = tags;
+
+          const taglist = document.getElementById(`taglist-${streamerId}`);
+          if (taglist) {
+            taglist.innerHTML = tags.length
+              ? tags.map(t => `
+                  <span class="tag-chip">
+                    ${esc(t)}
+                    <button onclick="removeTag('${streamerId}', '${esc(t)}')">×</button>
+                  </span>
+                `).join('')
+              : '<span class="no-tags">Aucun tag</span>';
+          }
+        } else {
+          alert('Erreur lors de la sauvegarde des tags.');
+        }
+      } catch {
+        alert('Erreur serveur.');
+      }
+    }
+
+    async function addStreamer() {
+      const input = document.getElementById('add-input');
+      const username = input.value.trim();
+      const errEl = document.getElementById('add-error');
+      const sucEl = document.getElementById('add-success');
+      const btn = document.getElementById('add-btn');
+
+      errEl.style.display = 'none';
+      sucEl.style.display = 'none';
+      if (!username) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Vérification...';
+
+      try {
+        const res = await fetch('/api/streamers', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': adminPassword
+          },
+          body: JSON.stringify({ username })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          input.value = '';
+          sucEl.textContent = `✓ ${data.streamer.displayName} ajouté avec succès !`;
+          sucEl.style.display = 'block';
+          setTimeout(() => { sucEl.style.display = 'none'; }, 3000);
+          await loadStreamers();
+        } else {
+          errEl.textContent = data.error || "Erreur lors de l'ajout.";
+          errEl.style.display = 'block';
+        }
+      } catch {
+        errEl.textContent = 'Erreur de connexion au serveur.';
+        errEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '+ Ajouter';
+      }
+    }
+
+    async function deleteStreamer(id, name) {
+      if (!confirm(`Supprimer ${name} de la liste ?`)) return;
+      try {
+        const res = await fetch(`/api/streamers/${id}`, {
+          method: 'DELETE',
+          headers: { 'x-admin-password': adminPassword }
+        });
+        if (res.ok) await loadStreamers();
+        else alert('Erreur lors de la suppression.');
+      } catch {
+        alert('Erreur serveur.');
+      }
+    }
+
+    // ─── Candidatures ─────────────────────────────────────────────────────
+    async function loadCandidates() {
+      try {
+        const res = await fetch('/api/candidates', {
+          headers: { 'x-admin-password': adminPassword }
+        });
+        const candidates = await res.json();
+        document.getElementById('candidates-count').textContent = candidates.length;
+
+        const container = document.getElementById('candidates-list');
+
+        if (candidates.length === 0) {
+          container.innerHTML = '<div class="empty-state">Aucune candidature en attente.</div>';
+          return;
+        }
+
+        container.innerHTML = candidates.map(c => `
+          <div class="candidate-card" id="cand-${c.id}">
+            <div class="cand-row">
+              <span class="cand-label">Chaine Twitch</span>
+              <span class="cand-value cand-twitch">@${esc(c.twitch)}</span>
+            </div>
+            <div class="cand-row">
+              <span class="cand-label">Prénom Nom</span>
+              <span class="cand-value">${esc(c.prenom)} ${esc(c.nom)}</span>
+            </div>
+            <div class="cand-row">
+              <span class="cand-label">Pseudo</span>
+              <span class="cand-value">${esc(c.pseudo)}</span>
+            </div>
+            <div class="cand-row">
+              <span class="cand-label">Date</span>
+              <span class="cand-value">${new Date(c.date).toLocaleDateString('fr-FR')}</span>
+            </div>
+            <div class="cand-actions">
+              <button class="btn-approve" onclick="approveCandidate('${c.id}', '${esc(c.twitch)}')">✓ Accepter</button>
+              <button class="btn-reject" onclick="rejectCandidate('${c.id}')">✕ Refuser</button>
+            </div>
+          </div>
+        `).join('');
+      } catch {
+        document.getElementById('candidates-list').innerHTML = '<div class="empty-state">Erreur de chargement.</div>';
+      }
+    }
+
+    async function approveCandidate(id, twitch) {
+      const btn = document.querySelector(`#cand-${id} .btn-approve`);
+      if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+      try {
+        const res = await fetch('/api/streamers', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': adminPassword
+          },
+          body: JSON.stringify({ username: twitch })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          await rejectCandidate(id);
+          await loadStreamers();
+        } else {
+          alert(data.error || "Erreur lors de l'ajout.");
+          if (btn) { btn.disabled = false; btn.textContent = '✓ Accepter'; }
+        }
+      } catch {
+        alert('Erreur serveur.');
+        if (btn) { btn.disabled = false; btn.textContent = '✓ Accepter'; }
+      }
+    }
+
+    async function rejectCandidate(id) {
+      await fetch(`/api/candidates/${id}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-password': adminPassword }
+      });
+      document.getElementById(`cand-${id}`)?.remove();
+      const list = document.getElementById('candidates-list');
+      const remaining = list?.querySelectorAll('.candidate-card').length || 0;
+      document.getElementById('candidates-count').textContent = remaining;
+      if (remaining === 0) {
+        list.innerHTML = '<div class="empty-state">Aucune candidature en attente.</div>';
+      }
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────
+    function esc(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+  </script>
+</body>
+</html>

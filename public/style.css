@@ -548,6 +548,25 @@ body > * { position: relative; z-index: 1; }
   gap: 4px;
 }
 
+/* ─── Card Tags ──────────────────────────────────────────────────────────── */
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.card-tag {
+  background: rgba(255,107,26,0.1);
+  border: 1px solid rgba(255,107,26,0.2);
+  color: var(--orange-light);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
 .card-offline-status {
   font-size: 0.76rem;
   color: #444;
