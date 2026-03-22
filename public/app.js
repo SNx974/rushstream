@@ -350,6 +350,7 @@ async function submitJoin(e) {
   const prenom = document.getElementById('join-prenom').value.trim();
   const pseudo = document.getElementById('join-pseudo').value.trim();
   const twitch = document.getElementById('join-twitch').value.trim();
+  const email = document.getElementById('join-email').value.trim();
 
   btn.disabled = true;
   btn.textContent = 'Envoi en cours...';
@@ -358,7 +359,7 @@ async function submitJoin(e) {
     const res = await fetch('/api/candidates', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nom, prenom, pseudo, twitch })
+      body: JSON.stringify({ nom, prenom, pseudo, twitch, email })
     });
     if (!res.ok) throw new Error();
     document.getElementById('join-form').reset();

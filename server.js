@@ -31,9 +31,14 @@ async function initDB() {
       prenom   VARCHAR(100),
       pseudo   VARCHAR(100),
       twitch   VARCHAR(100),
+      email    VARCHAR(200),
       date     TIMESTAMPTZ DEFAULT NOW(),
       statut   VARCHAR(50) DEFAULT 'En attente'
     )
+  `);
+  // Ajouter email si la table existait déjà sans cette colonne
+  await pool.query(`
+    ALTER TABLE candidates ADD COLUMN IF NOT EXISTS email VARCHAR(200)
   `);
   console.log('✅ Base de données initialisée');
 }
@@ -79,16 +84,16 @@ async function loadCandidates() {
   const r = await pool.query('SELECT * FROM candidates ORDER BY date DESC');
   return r.rows.map(r => ({
     id: r.id, nom: r.nom, prenom: r.prenom,
-    pseudo: r.pseudo, twitch: r.twitch,
+    pseudo: r.pseudo, twitch: r.twitch, email: r.email,
     date: r.date, statut: r.statut
   }));
 }
 
 async function insertCandidate(c) {
   await pool.query(
-    `INSERT INTO candidates (id, nom, prenom, pseudo, twitch)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [c.id, c.nom, c.prenom, c.pseudo, c.twitch]
+    `INSERT INTO candidates (id, nom, prenom, pseudo, twitch, email)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [c.id, c.nom, c.prenom, c.pseudo, c.twitch, c.email || null]
   );
 }
 
@@ -254,13 +259,14 @@ app.post('/api/admin/login', (req, res) => {
 
 // POST /api/candidates
 app.post('/api/candidates', async (req, res) => {
-  const { nom, prenom, pseudo, twitch } = req.body;
+  const { nom, prenom, pseudo, twitch, email } = req.body;
   if (!nom || !prenom || !pseudo || !twitch)
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   await insertCandidate({
     id: Date.now().toString(),
     nom: nom.trim(), prenom: prenom.trim(),
-    pseudo: pseudo.trim(), twitch: twitch.trim().toLowerCase()
+    pseudo: pseudo.trim(), twitch: twitch.trim().toLowerCase(),
+    email: email ? email.trim().toLowerCase() : null
   });
   res.json({ success: true });
 });

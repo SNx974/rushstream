@@ -690,6 +690,7 @@
   <script>
     let adminPassword = null;
     let streamersData = [];
+    let liveMap = {};
 
     // ─── Navigation ──────────────────────────────────────────────────────
     function goTo(page) {
@@ -746,10 +747,14 @@
     // ─── Streamers ───────────────────────────────────────────────────────
     async function loadStreamers() {
       try {
-        const res = await fetch('/api/streamers/raw', {
-          headers: { 'x-admin-password': adminPassword }
-        });
-        streamersData = await res.json();
+        const [rawRes, liveRes] = await Promise.all([
+          fetch('/api/streamers/raw', { headers: { 'x-admin-password': adminPassword } }),
+          fetch('/api/streamers')
+        ]);
+        streamersData = await rawRes.json();
+        const liveData = await liveRes.json();
+        liveMap = {};
+        liveData.forEach(s => { liveMap[s.id] = s.isLive; });
 
         const featuredCount = streamersData.filter(s => s.featured).length;
         document.getElementById('nav-featured-count').textContent = featuredCount;
@@ -776,10 +781,11 @@
 
       container.innerHTML = sorted.map(s => {
         const isFeat = s.featured || false;
+        const isLive = !!liveMap[s.id];
         return `
-          <div class="feat-toggle-card ${isFeat ? 'is-featured' : ''}" id="feat-card-${s.id}">
-            <div class="status-dot ${s.isLive ? 'live' : 'offline'}"></div>
-            ${s.isLive
+          <div class="feat-toggle-card ${isFeat ? 'is-featured' : ''} ${!isLive ? 'offline-card' : ''}" id="feat-card-${s.id}">
+            <div class="status-dot ${isLive ? 'live' : 'offline'}"></div>
+            ${isLive
               ? '<span class="feat-live-badge">LIVE</span>'
               : '<span class="feat-offline-badge">OFFLINE</span>'}
             <div class="feat-card-name">
@@ -846,7 +852,7 @@
       return `
         <div class="card" id="item-${s.id}">
           <div class="card-header">
-            <div class="status-dot offline"></div>
+            <div class="status-dot ${liveMap[s.id] ? 'live' : 'offline'}"></div>
             <div class="card-info">
               <div class="card-name">${esc(s.displayName || s.username)}</div>
               <div class="card-login">@${esc(s.username)}</div>
@@ -1010,6 +1016,11 @@
               <span class="cand-label">Pseudo</span>
               <span class="cand-value">${esc(c.pseudo)}</span>
             </div>
+            ${c.email ? `
+            <div class="cand-row">
+              <span class="cand-label">E-mail</span>
+              <span class="cand-value">${esc(c.email)}</span>
+            </div>` : ''}
             <div class="cand-row">
               <span class="cand-label">Date</span>
               <span class="cand-value">${new Date(c.date).toLocaleDateString('fr-FR')}</span>
