@@ -51,18 +51,28 @@
     <div class="featured-header">
       <div class="featured-live-dot"></div>
       <span class="featured-label">En ce moment sur RushStream 974</span>
-    </div>
-    <div class="featured-layout">
-      <!-- Player principal -->
-      <div class="featured-main">
-        <div class="featured-player-wrap">
-          <div class="featured-player" id="featured-player"></div>
-        </div>
-        <div class="featured-main-info" id="featured-main-info"></div>
+      <div class="feat-nav-pills" id="feat-nav-pills" style="display:none">
+        <button class="feat-nav-btn" onclick="carouselPrev()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span class="feat-nav-counter" id="feat-counter">1 / 1</span>
+        <button class="feat-nav-btn" onclick="carouselNext()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
-      <!-- Sidebar autres streams -->
-      <div class="featured-side" id="featured-side"></div>
     </div>
+    <div class="carousel-outer">
+      <div class="carousel-viewport" id="carousel-viewport">
+        <div class="carousel-track" id="carousel-track"></div>
+      </div>
+      <button class="carousel-arrow carousel-arrow-left" id="carr-left" onclick="carouselPrev()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="carousel-arrow carousel-arrow-right" id="carr-right" onclick="carouselNext()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+    <div class="featured-info-bar" id="featured-info-bar"></div>
   </section>
 
   <!-- ─── Filter Bar ─────────────────────────────────────────────────────── -->
