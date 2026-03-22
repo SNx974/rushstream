@@ -119,8 +119,8 @@ function updateCarouselPosition() {
   if (!viewport || !track) return;
 
   const vw = viewport.offsetWidth;
-  const itemW = vw * 0.62;
-  const gap = 12;
+  const itemW = vw * 0.72;
+  const gap = 10;
   const peekOffset = (vw - itemW) / 2;
   const offset = peekOffset - carouselIndex * (itemW + gap);
   track.style.transform = `translateX(${offset}px)`;

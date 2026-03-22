@@ -231,23 +231,23 @@ body > * { position: relative; z-index: 1; }
 
 /* ─── Featured Section — Carrousel ───────────────────────────────────────── */
 .featured-section {
-  padding: 0 0 2rem;
+  padding: 0 0 1.25rem;
   width: 100%;
   overflow: hidden;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .featured-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 2.5rem 1.25rem;
-  max-width: 1400px;
-  margin: 0 auto;
+  gap: 8px;
+  padding: 0 1.5rem 0.75rem;
 }
 
 .featured-live-dot {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--live-red);
   flex-shrink: 0;
@@ -260,23 +260,23 @@ body > * { position: relative; z-index: 1; }
 }
 
 .featured-label {
-  font-size: 1rem;
-  font-weight: 800;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: var(--white);
-  flex: 1;
 }
 
-/* Nav pills (compteur + flèches top) */
+/* Nav pills centrés sous le carrousel */
 .feat-nav-pills {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-left: auto;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .feat-nav-btn {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: var(--dark2);
   border: 1px solid var(--border-light);
@@ -296,7 +296,7 @@ body > * { position: relative; z-index: 1; }
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--grey);
-  min-width: 36px;
+  min-width: 32px;
   text-align: center;
 }
 
@@ -306,17 +306,17 @@ body > * { position: relative; z-index: 1; }
   width: 100%;
 }
 
-/* Viewport : overflow caché, items qui dépassent = coupés */
+/* Viewport */
 .carousel-viewport {
   overflow: hidden;
   width: 100%;
 }
 
-/* Track : flex row, transition fluide */
+/* Track */
 .carousel-track {
   display: flex;
-  gap: 16px;
-  transition: transform 0.48s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  gap: 10px;
+  transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   will-change: transform;
 }
 
@@ -425,17 +425,17 @@ body > * { position: relative; z-index: 1; }
 
 .carousel-arrow:disabled { opacity: 0.25; cursor: not-allowed; }
 .carousel-arrow svg { width: 18px; height: 18px; }
-.carousel-arrow-left { left: 16px; }
-.carousel-arrow-right { right: 16px; }
+.carousel-arrow-left { left: 8px; }
+.carousel-arrow-right { right: 8px; }
 
 /* ─── Carousel items ─────────────────────────────────────────────────────── */
 .carousel-item {
-  min-width: 62%;
+  min-width: 72%;
   flex-shrink: 0;
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
-  opacity: 0.42;
-  transform: scale(0.94);
+  opacity: 0.38;
+  transform: scale(0.93);
   transition: opacity 0.35s ease, transform 0.45s ease;
   cursor: pointer;
   background: #000;
