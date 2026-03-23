@@ -664,6 +664,9 @@ body > * { position: relative; z-index: 1; }
   .carr-active-wrap { flex-direction: column; }
   .carr-player { width: 100%; }
   .carr-info { padding: 10px 12px; }
+  .featured-section { max-width: 100%; padding: 0 1rem 1.25rem; }
+  .carousel-track { justify-content: center; }
+  .featured-header { padding: 0 0.5rem 0.75rem; }
 }
 
 /* ─── Filter Bar ─────────────────────────────────────────────────────────── */
