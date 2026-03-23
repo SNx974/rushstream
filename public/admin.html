@@ -542,6 +542,27 @@
 
     .feat-toggle-card.is-featured .feat-star { opacity: 1; }
 
+    .feat-timer-select {
+      background: var(--dark);
+      border: 1px solid var(--border-light);
+      color: var(--white);
+      font-size: 0.74rem;
+      font-family: inherit;
+      border-radius: 7px;
+      padding: 5px 8px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .feat-timer-select:focus { outline: none; border-color: var(--orange); }
+
+    .feat-until-label {
+      font-size: 0.72rem;
+      color: var(--orange);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
     /* ══════════════════════════════════════════════════════
        PAGE: CANDIDATURES
     ══════════════════════════════════════════════════════ */
@@ -865,17 +886,25 @@
       container.innerHTML = sorted.map(s => {
         const isFeat = s.featured || false;
         const isLive = !!liveMap[s.id];
+        const untilLabel = isFeat && s.featuredUntil ? `<span class="feat-until-label">⏱ ${featUntilText(s.featuredUntil)}</span>` : '';
+        const timerSelect = !isFeat ? `
+          <select class="feat-timer-select" id="timer-${s.id}">
+            <option value="">Sans limite</option>
+            <option value="1">1h</option>
+            <option value="2">2h</option>
+            <option value="3">3h</option>
+          </select>` : '';
         return `
           <div class="feat-toggle-card ${isFeat ? 'is-featured' : ''} ${!isLive ? 'offline-card' : ''}" id="feat-card-${s.id}">
             <div class="status-dot ${isLive ? 'live' : 'offline'}"></div>
-            ${isLive
-              ? '<span class="feat-live-badge">LIVE</span>'
-              : '<span class="feat-offline-badge">OFFLINE</span>'}
+            ${isLive ? '<span class="feat-live-badge">LIVE</span>' : '<span class="feat-offline-badge">OFFLINE</span>'}
             <div class="feat-card-name">
               <div class="name">${esc(s.displayName || s.username)}</div>
               <div class="login">@${esc(s.username)}</div>
             </div>
             <span class="feat-star">★</span>
+            ${untilLabel}
+            ${timerSelect}
             <button class="btn-sm ${isFeat ? 'btn-orange active' : 'btn-orange'}"
                     id="feat-btn-${s.id}"
                     onclick="toggleFeatured('${s.id}', ${isFeat})">
@@ -888,16 +917,14 @@
 
     async function toggleFeatured(id, currentState) {
       const btn = document.getElementById(`feat-btn-${id}`);
+      const hours = !currentState ? (document.getElementById(`timer-${id}`)?.value || '') : '';
       if (btn) { btn.disabled = true; btn.textContent = '...'; }
 
       try {
         const res = await fetch(`/api/streamers/${id}/featured`, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-admin-password': adminPassword
-          },
-          body: JSON.stringify({ featured: !currentState })
+          headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+          body: JSON.stringify({ featured: !currentState, hours: hours || undefined })
         });
 
         if (res.ok) {
@@ -909,6 +936,12 @@
         alert('Erreur serveur.');
         if (btn) { btn.disabled = false; btn.textContent = currentState ? 'Retirer' : 'Mettre en avant'; }
       }
+    }
+
+    function featUntilText(dateStr) {
+      const diff = Math.max(0, Math.floor((new Date(dateStr) - Date.now()) / 60000));
+      if (diff >= 60) return `expire dans ${Math.floor(diff / 60)}h${diff % 60 > 0 ? String(diff % 60).padStart(2,'0') : ''}`;
+      return `expire dans ${diff}min`;
     }
 
     // ─── PAGE: COMPTES ───────────────────────────────────────────────────
