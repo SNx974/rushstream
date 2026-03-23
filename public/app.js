@@ -109,8 +109,10 @@ function buildCarouselItemHtml(s, i) {
 function buildCarousel() {
   const track = document.getElementById('carousel-track');
   track.innerHTML = featuredLive.map((s, i) => buildCarouselItemHtml(s, i)).join('');
-  updateCarouselPosition();
-  updateNavVisibility();
+  requestAnimationFrame(() => {
+    updateCarouselPosition();
+    updateNavVisibility();
+  });
 }
 
 function updateCarouselPosition() {

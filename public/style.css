@@ -660,12 +660,13 @@ body > * { position: relative; z-index: 1; }
 }
 
 @media (max-width: 768px) {
-  .featured-section { max-width: 100%; padding: 0 0 1.25rem; transform: scale(0.75); transform-origin: top center; margin-bottom: -6rem; }
-  .carousel-item { min-width: 88%; }
+  .featured-section { max-width: 100%; padding: 0 0 1.25rem; }
+  .featured-header { padding: 0 1rem 0.75rem; }
+  .carousel-item { min-width: 100%; border-radius: 0; opacity: 1; transform: none; }
+  .carousel-item.active { transform: none; }
   .carr-active-wrap { flex-direction: column; }
   .carr-player { width: 100%; }
   .carr-info { padding: 10px 12px; }
-  .featured-header { padding: 0 1rem 0.75rem; }
 }
 
 /* ─── Filter Bar ─────────────────────────────────────────────────────────── */
