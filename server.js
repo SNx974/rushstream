@@ -21,7 +21,7 @@ async function initDB() {
       username     VARCHAR(100) NOT NULL UNIQUE,
       display_name VARCHAR(100),
       added_at     DATETIME DEFAULT NOW(),
-      tags         TEXT DEFAULT '[]',
+      tags         TEXT,
       featured     TINYINT(1) DEFAULT 0
     )
   `);
