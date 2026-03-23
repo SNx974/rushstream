@@ -121,10 +121,10 @@ function updateCarouselPosition() {
   if (!viewport || !track) return;
 
   const vw = viewport.offsetWidth;
-  const firstItem = track.querySelector('.carousel-item');
-  const itemW = firstItem ? firstItem.offsetWidth : vw * 0.72;
-  const gap = 10;
-  const peekOffset = (vw - itemW) / 2;
+  const isMobile = window.innerWidth <= 768;
+  const gap = isMobile ? 0 : 10;
+  const itemW = isMobile ? vw : (track.querySelector('.carousel-item')?.offsetWidth || vw * 0.72);
+  const peekOffset = isMobile ? 0 : (vw - itemW) / 2;
   const offset = peekOffset - carouselIndex * (itemW + gap);
   track.style.transform = `translateX(${offset}px)`;
 }
