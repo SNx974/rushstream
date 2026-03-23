@@ -37,10 +37,6 @@ async function initDB() {
       statut   VARCHAR(50) DEFAULT 'En attente'
     )
   `);
-  // Ajouter email si la table existait déjà sans cette colonne
-  await pool.query(`
-    ALTER TABLE candidates ADD COLUMN IF NOT EXISTS email VARCHAR(200)
-  `);
   console.log('✅ Base de données initialisée');
 }
 
