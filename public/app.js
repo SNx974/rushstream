@@ -40,11 +40,22 @@ let carouselIndex = 0;
 let featuredLive = [];
 
 function renderFeatured(streamers) {
-  featuredLive = streamers.filter(s => s.featured && s.isLive);
+  const newFeaturedLive = streamers.filter(s => s.featured && s.isLive);
   const section = document.getElementById('featured-section');
-  if (featuredLive.length === 0) { section.style.display = 'none'; return; }
+  if (newFeaturedLive.length === 0) { section.style.display = 'none'; featuredLive = []; currentFeaturedUsername = null; return; }
   section.style.display = 'block';
-  if (carouselIndex >= featuredLive.length) carouselIndex = 0;
+
+  const activeUsername = newFeaturedLive[carouselIndex >= newFeaturedLive.length ? 0 : carouselIndex]?.username;
+  if (carouselIndex >= newFeaturedLive.length) carouselIndex = 0;
+
+  // Ne pas reconstruire l'iframe si le streamer actif n'a pas changé
+  if (activeUsername && activeUsername === currentFeaturedUsername && featuredLive.length === newFeaturedLive.length) {
+    featuredLive = newFeaturedLive;
+    return;
+  }
+
+  featuredLive = newFeaturedLive;
+  currentFeaturedUsername = activeUsername;
   buildCarousel();
 }
 
@@ -134,18 +145,21 @@ function updateCarouselPosition() {
 function carouselPrev() {
   if (carouselIndex <= 0) return;
   carouselIndex--;
+  currentFeaturedUsername = featuredLive[carouselIndex]?.username;
   buildCarousel();
 }
 
 function carouselNext() {
   if (carouselIndex >= featuredLive.length - 1) return;
   carouselIndex++;
+  currentFeaturedUsername = featuredLive[carouselIndex]?.username;
   buildCarousel();
 }
 
 function carouselGoTo(index) {
   if (index === carouselIndex) return;
   carouselIndex = index;
+  currentFeaturedUsername = featuredLive[carouselIndex]?.username;
   buildCarousel();
 }
 
