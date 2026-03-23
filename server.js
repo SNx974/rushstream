@@ -37,6 +37,10 @@ async function initDB() {
       statut   VARCHAR(50) DEFAULT 'En attente'
     )
   `);
+  // Migration: ajouter featured_until si absent
+  try {
+    await pool.query('ALTER TABLE streamers ADD COLUMN featured_until DATETIME NULL');
+  } catch (e) { /* colonne déjà présente */ }
   console.log('✅ Base de données initialisée');
 }
 
@@ -53,7 +57,8 @@ function dbToStreamer(r) {
     displayName: r.display_name,
     addedAt: r.added_at,
     tags: r.tags ? JSON.parse(r.tags) : [],
-    featured: !!r.featured
+    featured: !!r.featured,
+    featuredUntil: r.featured_until || null
   };
 }
 
@@ -73,8 +78,17 @@ async function updateStreamerTags(id, tags) {
   await pool.query('UPDATE streamers SET tags = ? WHERE id = ?', [JSON.stringify(tags), id]);
 }
 
-async function updateStreamerFeatured(id, featured) {
-  await pool.query('UPDATE streamers SET featured = ? WHERE id = ?', [featured ? 1 : 0, id]);
+async function updateStreamerFeatured(id, featured, featuredUntil = null) {
+  await pool.query(
+    'UPDATE streamers SET featured = ?, featured_until = ? WHERE id = ?',
+    [featured ? 1 : 0, featured && featuredUntil ? featuredUntil : null, id]
+  );
+}
+
+async function expireFeatures() {
+  await pool.query(
+    'UPDATE streamers SET featured = 0, featured_until = NULL WHERE featured = 1 AND featured_until IS NOT NULL AND featured_until <= NOW()'
+  );
 }
 
 async function loadCandidates() {
@@ -321,6 +335,7 @@ async function sendCandidateNotification(candidateId, action) {
 // GET /api/streamers
 app.get('/api/streamers', async (req, res) => {
   try {
+    await expireFeatures();
     const streamers = await loadStreamers();
     if (streamers.length === 0) return res.json([]);
 
@@ -433,9 +448,15 @@ app.patch('/api/streamers/:id/tags', async (req, res) => {
 // PATCH /api/streamers/:id/featured
 app.patch('/api/streamers/:id/featured', async (req, res) => {
   if (!checkAdmin(req, res)) return;
-  const { featured } = req.body;
-  await updateStreamerFeatured(req.params.id, !!featured);
-  res.json({ success: true, featured: !!featured });
+  const { featured, hours } = req.body;
+  let featuredUntil = null;
+  if (featured && hours) {
+    const d = new Date();
+    d.setHours(d.getHours() + parseInt(hours));
+    featuredUntil = d.toISOString().slice(0, 19).replace('T', ' ');
+  }
+  await updateStreamerFeatured(req.params.id, !!featured, featuredUntil);
+  res.json({ success: true, featured: !!featured, featuredUntil });
 });
 
 // POST /api/admin/login

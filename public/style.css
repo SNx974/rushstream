@@ -1381,6 +1381,50 @@ body > * { position: relative; z-index: 1; }
 
 .btn-approve:disabled { opacity: 0.4; cursor: not-allowed; }
 
+.admin-streamer-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.feat-timer-select {
+  background: var(--dark2);
+  border: 1px solid var(--border);
+  color: var(--white);
+  font-size: 0.74rem;
+  border-radius: 6px;
+  padding: 4px 7px;
+  cursor: pointer;
+}
+
+.btn-featured {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255,107,26,0.08);
+  border: 1px solid rgba(255,107,26,0.25);
+  color: var(--orange);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.btn-featured:hover {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: #000;
+}
+
+.btn-featured.active {
+  background: rgba(255,107,26,0.2);
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
 .btn-delete {
   padding: 4px 10px;
   border-radius: 6px;

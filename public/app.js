@@ -525,18 +525,35 @@ async function loadAdminList() {
     const liveMap = {};
     allStreamers.forEach(s => { liveMap[s.id] = s.isLive; });
 
-    container.innerHTML = streamers.map(s => `
+    container.innerHTML = streamers.map(s => {
+      const featuredLabel = s.featured
+        ? (s.featuredUntil ? `⭐ Mis en avant (expire ${formatFeaturedUntil(s.featuredUntil)})` : '⭐ Mis en avant')
+        : '☆ Mettre en avant';
+      const timerSelect = !s.featured ? `
+        <select class="feat-timer-select" id="timer-${s.id}">
+          <option value="">Sans limite</option>
+          <option value="1">1h</option>
+          <option value="2">2h</option>
+          <option value="3">3h</option>
+        </select>` : '';
+      return `
       <div class="admin-streamer-item" id="item-${s.id}">
         <div class="admin-streamer-info">
           <div class="${liveMap[s.id] ? 'live-indicator' : 'offline-indicator'}"></div>
           <span class="admin-streamer-name">${escHtml(s.displayName || s.username)}</span>
           <span style="color:#555;font-size:0.78rem">(@${escHtml(s.username)})</span>
         </div>
-        <button class="btn-delete" onclick="deleteStreamer('${s.id}', '${escHtml(s.displayName || s.username)}')">
-          Supprimer
-        </button>
-      </div>
-    `).join('');
+        <div class="admin-streamer-actions">
+          ${timerSelect}
+          <button class="btn-featured ${s.featured ? 'active' : ''}" onclick="toggleFeatured('${s.id}', ${s.featured})">
+            ${featuredLabel}
+          </button>
+          <button class="btn-delete" onclick="deleteStreamer('${s.id}', '${escHtml(s.displayName || s.username)}')">
+            Supprimer
+          </button>
+        </div>
+      </div>`;
+    }).join('');
   } catch {
     container.innerHTML = '<p style="color:#ff6b6b;font-size:0.85rem">Erreur lors du chargement.</p>';
   }
@@ -588,6 +605,31 @@ async function addStreamer() {
     btn.disabled = false;
     btn.textContent = '+ Ajouter le streamer';
   }
+}
+
+// ─── Admin — Toggle Featured ──────────────────────────────────────────────
+async function toggleFeatured(id, isFeatured) {
+  const newFeatured = !isFeatured;
+  const hours = newFeatured ? (document.getElementById(`timer-${id}`)?.value || '') : '';
+  try {
+    const res = await fetch(`/api/streamers/${id}/featured`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+      body: JSON.stringify({ featured: newFeatured, hours: hours || undefined })
+    });
+    if (res.ok) {
+      await loadStreamers();
+      await loadAdminList();
+    }
+  } catch { alert('Erreur lors de la mise à jour.'); }
+}
+
+function formatFeaturedUntil(dateStr) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diff = Math.max(0, Math.floor((d - now) / 60000));
+  if (diff >= 60) return `dans ${Math.floor(diff / 60)}h${diff % 60 > 0 ? String(diff % 60).padStart(2,'0') : ''}`;
+  return `dans ${diff}min`;
 }
 
 // ─── Admin — Supprimer ────────────────────────────────────────────────────
