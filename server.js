@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const fetch = require('node-fetch');
 const path = require('path');
-const { Pool } = require('pg');
+const mysql = require('mysql2/promise');
 const nodemailer = require('nodemailer');
 
 const app = express();
@@ -11,18 +11,18 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ─── PostgreSQL ─────────────────────────────────────────────────────────────
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// ─── MySQL ───────────────────────────────────────────────────────────────────
+const pool = mysql.createPool(process.env.DATABASE_URL);
 
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS streamers (
-      id          VARCHAR(50) PRIMARY KEY,
-      username    VARCHAR(100) NOT NULL UNIQUE,
+      id           VARCHAR(50) PRIMARY KEY,
+      username     VARCHAR(100) NOT NULL UNIQUE,
       display_name VARCHAR(100),
-      added_at    TIMESTAMPTZ DEFAULT NOW(),
-      tags        TEXT[]  DEFAULT '{}',
-      featured    BOOLEAN DEFAULT FALSE
+      added_at     DATETIME DEFAULT NOW(),
+      tags         TEXT DEFAULT '[]',
+      featured     TINYINT(1) DEFAULT 0
     )
   `);
   await pool.query(`
@@ -33,7 +33,7 @@ async function initDB() {
       pseudo   VARCHAR(100),
       twitch   VARCHAR(100),
       email    VARCHAR(200),
-      date     TIMESTAMPTZ DEFAULT NOW(),
+      date     DATETIME DEFAULT NOW(),
       statut   VARCHAR(50) DEFAULT 'En attente'
     )
   `);
@@ -46,8 +46,8 @@ async function initDB() {
 
 // ─── DB Helpers ─────────────────────────────────────────────────────────────
 async function loadStreamers() {
-  const r = await pool.query('SELECT * FROM streamers ORDER BY added_at ASC');
-  return r.rows.map(dbToStreamer);
+  const [rows] = await pool.query('SELECT * FROM streamers ORDER BY added_at ASC');
+  return rows.map(dbToStreamer);
 }
 
 function dbToStreamer(r) {
@@ -56,34 +56,34 @@ function dbToStreamer(r) {
     username: r.username,
     displayName: r.display_name,
     addedAt: r.added_at,
-    tags: r.tags || [],
-    featured: r.featured || false
+    tags: r.tags ? JSON.parse(r.tags) : [],
+    featured: !!r.featured
   };
 }
 
 async function insertStreamer(s) {
   await pool.query(
     `INSERT INTO streamers (id, username, display_name, tags, featured)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [s.id, s.username, s.displayName, s.tags || [], false]
+     VALUES (?, ?, ?, ?, ?)`,
+    [s.id, s.username, s.displayName, JSON.stringify(s.tags || []), 0]
   );
 }
 
 async function removeStreamer(id) {
-  await pool.query('DELETE FROM streamers WHERE id = $1', [id]);
+  await pool.query('DELETE FROM streamers WHERE id = ?', [id]);
 }
 
 async function updateStreamerTags(id, tags) {
-  await pool.query('UPDATE streamers SET tags = $1 WHERE id = $2', [tags, id]);
+  await pool.query('UPDATE streamers SET tags = ? WHERE id = ?', [JSON.stringify(tags), id]);
 }
 
 async function updateStreamerFeatured(id, featured) {
-  await pool.query('UPDATE streamers SET featured = $1 WHERE id = $2', [featured, id]);
+  await pool.query('UPDATE streamers SET featured = ? WHERE id = ?', [featured ? 1 : 0, id]);
 }
 
 async function loadCandidates() {
-  const r = await pool.query('SELECT * FROM candidates ORDER BY date DESC');
-  return r.rows.map(r => ({
+  const [rows] = await pool.query('SELECT * FROM candidates ORDER BY date DESC');
+  return rows.map(r => ({
     id: r.id, nom: r.nom, prenom: r.prenom,
     pseudo: r.pseudo, twitch: r.twitch, email: r.email,
     date: r.date, statut: r.statut
@@ -93,13 +93,13 @@ async function loadCandidates() {
 async function insertCandidate(c) {
   await pool.query(
     `INSERT INTO candidates (id, nom, prenom, pseudo, twitch, email)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
+     VALUES (?, ?, ?, ?, ?, ?)`,
     [c.id, c.nom, c.prenom, c.pseudo, c.twitch, c.email || null]
   );
 }
 
 async function removeCandidate(id) {
-  await pool.query('DELETE FROM candidates WHERE id = $1', [id]);
+  await pool.query('DELETE FROM candidates WHERE id = ?', [id]);
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -293,9 +293,9 @@ function buildRejectEmailHtml(c) {
 }
 
 async function sendCandidateNotification(candidateId, action) {
-  const r = await pool.query('SELECT * FROM candidates WHERE id = $1', [candidateId]);
-  if (r.rows.length === 0) return { sent: false, reason: 'not-found' };
-  const c = r.rows[0];
+  const [rows] = await pool.query('SELECT * FROM candidates WHERE id = ?', [candidateId]);
+  if (rows.length === 0) return { sent: false, reason: 'not-found' };
+  const c = rows[0];
   if (!c.email) return { sent: false, reason: 'no-email' };
 
   const transporter = createTransporter();
