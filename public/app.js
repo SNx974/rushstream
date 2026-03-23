@@ -108,7 +108,9 @@ function buildCarouselItemHtml(s, i) {
 
 function buildCarousel() {
   const track = document.getElementById('carousel-track');
-  track.innerHTML = featuredLive.map((s, i) => buildCarouselItemHtml(s, i)).join('');
+  const isMobile = window.innerWidth <= 768;
+  const items = isMobile ? [featuredLive[carouselIndex]] : featuredLive;
+  track.innerHTML = items.map((s, i) => buildCarouselItemHtml(s, isMobile ? carouselIndex : i)).join('');
   requestAnimationFrame(() => {
     updateCarouselPosition();
     updateNavVisibility();
@@ -148,7 +150,8 @@ function carouselGoTo(index) {
 }
 
 function updateNavVisibility() {
-  const multi = featuredLive.length > 1;
+  const isMobile = window.innerWidth <= 768;
+  const multi = !isMobile && featuredLive.length > 1;
   const leftBtn = document.getElementById('carr-left');
   const rightBtn = document.getElementById('carr-right');
   const pills = document.getElementById('feat-nav-pills');
