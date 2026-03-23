@@ -252,7 +252,7 @@ body > * { position: relative; z-index: 1; }
   padding: 0 0 1.25rem;
   width: 100%;
   overflow: hidden;
-  max-width: 900px;
+  max-width: 1080px;
   margin: 0 auto;
 }
 
