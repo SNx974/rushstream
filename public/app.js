@@ -119,7 +119,8 @@ function updateCarouselPosition() {
   if (!viewport || !track) return;
 
   const vw = viewport.offsetWidth;
-  const itemW = vw * 0.72;
+  const firstItem = track.querySelector('.carousel-item');
+  const itemW = firstItem ? firstItem.offsetWidth : vw * 0.72;
   const gap = 10;
   const peekOffset = (vw - itemW) / 2;
   const offset = peekOffset - carouselIndex * (itemW + gap);
